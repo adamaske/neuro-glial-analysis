@@ -2,84 +2,109 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 import os
-channels = ["s1d1", "s1d2", "s1d3", "s2d1", "s2d3", "s2d4", "s3d2", "s3d3", "s4d3", "s4d4"]
-data = []
-for channel in channels:
-    ch = pd.read_csv(os.path.join("data", channel) + ".csv").transpose()
-    array = np.array(ch)
-    data.append(array)
-data = np.array(data)
+left_channels = ["s1d1", "s1d2", "s1d3", "s2d1", "s2d3", "s2d4", "s3d2", "s3d3", "s4d3", "s4d4"]
+right_channels = ["s5d5", "s5d6", "s5d7", "s6d5", "s6d7", "s6d8", "s7d6", "s7d7", "s8d7", "s8d8"]
 
-#DISPLAY ALL CHANNELS
-for i in range(len(data)):
-    ch = data[i]
-    oxy = ch[0]
-    glm_oxy = ch[1]
-    deoxy = ch[2]
-    glm_deoxy = ch[3]
-    
-    #plt.title()
-    #plt.plot(oxy)
-    #plt.plot(deoxy)
-    #plt.plot(glm_oxy)
-    #plt.plot(glm_deoxy)
-    #plt.show()
+left = []
+right = []
+
+for channel in left_channels:
+    data = np.array(pd.read_csv("data/left_hemisphere/" + channel + ".csv")).transpose()
+    left.append(data)
+
+for channel in right_channels:
+    data = np.array(pd.read_csv("data/right_hemisphere/" + channel + ".csv")).transpose()
+    right.append(data)
+
+left = np.array(left)
+right = np.array(right)
 
 
-mean_oxy =     np.mean([data[0][0], 
-                        data[1][0],
-                        data[2][0],
-                        data[3][0],
-                        data[4][0],
-                        data[5][0],
-                        data[6][0],
-                        data[7][0],
-                        data[8][0],
-                        data[9][0]], axis=0)
-mean_glm_oxy = np.mean([data[0][1], 
-                        data[1][1],
-                        data[2][1],
-                        data[3][1],
-                        data[4][1],
-                        data[5][1],
-                        data[6][1],
-                        data[7][1],
-                        data[8][1],
-                        data[9][1]], axis=0)
+l_mean_oxy  = np.mean([left[0][0], 
+                     left[1][0],
+                     left[2][0],
+                     left[3][0],
+                     left[4][0],
+                     left[5][0],
+                     left[6][0],
+                     left[7][0],
+                     left[8][0],
+                     left[9][0]], axis=0)
+l_mean_glm_oxy  = np.mean([left[0][1], 
+                           left[1][1],
+                           left[2][1],
+                           left[3][1],
+                           left[4][1],
+                           left[5][1],
+                           left[6][1],
+                           left[7][1],
+                           left[8][1],
+                           left[9][1]], axis=0)
+l_mean_deoxy  = np.mean([left[0][2], 
+                         left[1][2],
+                         left[2][2],
+                         left[3][2],
+                         left[4][2],
+                         left[5][2],
+                         left[6][2],
+                         left[7][2],
+                         left[8][2],
+                         left[9][2]], axis=0)
+l_mean_glm_deoxy  = np.mean([left[0][3], 
+                             left[1][3],
+                             left[2][3],
+                             left[3][3],
+                             left[4][3],
+                             left[5][3],
+                             left[6][3],
+                             left[7][3],
+                             left[8][3],
+                             left[9][3]], axis=0)
+r_mean_oxy  = np.mean([right[0][0], 
+                       right[1][0],
+                       right[2][0],
+                       right[3][0],
+                       right[4][0],
+                       right[5][0],
+                       right[6][0],
+                       right[7][0],
+                       right[8][0],
+                       right[9][0]], axis=0)
+r_mean_glm_oxy  = np.mean([right[0][1], 
+                           right[1][1],
+                           right[2][1],
+                           right[3][1],
+                           right[4][1],
+                           right[5][1],
+                           right[6][1],
+                           right[7][1],
+                           right[8][1],
+                           right[9][1]], axis=0)
+r_mean_deoxy  = np.mean([right[0][2], 
+                         right[1][2],
+                         right[2][2],
+                         right[3][2],
+                         right[4][2],
+                         right[5][2],
+                         right[6][2],
+                         right[7][2],
+                         right[8][2],
+                         right[9][2]], axis=0)
+r_mean_glm_deoxy  = np.mean([right[0][3], 
+                             right[1][3],
+                             right[2][3],
+                             right[3][3],
+                             right[4][3],
+                             right[5][3],
+                             right[6][3],
+                             right[7][3],
+                             right[8][3],
+                             right[9][3]], axis=0)
 
-mean_deoxy =   np.mean([data[0][2], 
-                        data[1][2],
-                        data[2][2],
-                        data[3][2],
-                        data[4][2],
-                        data[5][2],
-                        data[6][2],
-                        data[7][2],
-                        data[8][2],
-                        data[9][2]], axis=0)
+fig, axs =  plt.subplots(1, 2)
+axs[0].plot(l_mean_glm_oxy, color="blue")
+axs[0].plot(l_mean_glm_deoxy, color="red")
 
-mean_glm_deoxy=np.mean([data[0][3], 
-                        data[1][3],
-                        data[2][3],
-                        data[3][3],
-                        data[4][3],
-                        data[5][3],
-                        data[6][3],
-                        data[7][3],
-                        data[8][3],
-                        data[9][3]], axis=0)
-
-
-fig, axs = plt.subplots(1, 2)
-l1 = axs[0].plot(mean_oxy, color='tab:blue')
-l2 = axs[0].plot(mean_deoxy, color='tab:orange')
-
-l3 = axs[1].plot(mean_glm_oxy, color='tab:blue')
-l4 = axs[1].plot(mean_glm_deoxy, color='tab:orange')
-
-
-fig.legend((l1, l2), ('HbO', 'HbR'), loc='upper left')
-fig.legend((l3, l4), ('HbO', 'HbR'), loc='upper right')
-
-plt.tight_layout()
+axs[1].plot(r_mean_glm_oxy, color="blue")
+axs[1].plot(r_mean_glm_deoxy, color="red")
 plt.show()
