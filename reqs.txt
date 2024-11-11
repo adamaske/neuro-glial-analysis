@@ -1,0 +1,8 @@
+
+numpy
+pandas
+mne
+mne-nirs
+matplotlib
+snirf
+nilearn
