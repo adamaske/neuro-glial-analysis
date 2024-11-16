@@ -11,10 +11,10 @@ class Experiment:
         self.participants = kwargs.get("participants", ["subject01", "subject02"])
         self.data_folder = kwargs.get("data_folder", os.getcwd())
         self.filepath = kwargs.get("filepath", None)
-        pass
-    def __post_init__(self):
+        
         if self.filepath is not None:
             self.read_json(self.filepath)
+        pass
 
     def __repr__(self):
         return f"Experiment : {self.name}\n time : {self.time}\n description : {self.description}\n participants : {self.participants}, data_folder : {self.data_folder}\n filepath : {self.filepath}"

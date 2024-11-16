@@ -7,12 +7,6 @@ dir_path = os.path.dirname(os.path.realpath(__file__)) #path of this file
 def data_folder():
     return os.path.join(os.getcwd(), "data")
 
-def experiments():
-    experiment_folders = ["balance-8-11", "balance-15-11"]
-    for i in range(len(experiment_folders)):
-        experiment_folders[i] = os.path.join(data_folder(), experiment_folders[i])
-    return experiment_folders
-
 def is_snirf_file(file_path): #Check for snirf file
     if pathlib.Path(file_path).suffix != '.snirf':
         return False
@@ -35,11 +29,3 @@ def find_snirf_in_folder(folder_path):
             snirf_paths.append(entry_path)
 
     return snirf_paths
-
-def folders():
-    for entry in os.listdir(data_folder()):
-        if os.path.isdir(entry): #is this an experiment
-            
-            pass
-        
-    return folders

@@ -1,28 +1,27 @@
-from datasets.fnirs_data import find_snirf_in_folder
-from experiments.experiment import Experiment, load_experiments
-from mne.io import read_raw_snirf
 import matplotlib.pyplot as plt
 import datetime
-from fnirs_preprocessing import preprocess
 
-experiments = load_experiments()
-experiment = Experiment(data_folder="C:/dev/neuro-glial-analysis/data/balance-15-11/2024-11-15_001")
-#what experiments do we have?
-print("Experiments : ", experiments)
-
-snirfs = find_snirf_in_folder(experiments.data_folder)
-print(snirfs)
+from mne.io import read_raw_snirf
+from mne.annotations import Annotations
+from fnirs_preprocessing import preprocess, annotations
+from datasets.fnirs_data import find_snirf_in_folder
+from experiments.experiment import Experiment, load_experiments
 
 
-r1 = read_raw_snirf(snirfs[0])
-r2 = read_raw_snirf(snirfs[1])
-r3 = read_raw_snirf(snirfs[2])
-r4 = read_raw_snirf(snirfs[3])
-r5 = read_raw_snirf(snirfs[4])
+#experiments = load_experiments("C:/dev/neuro-glial-analysis/experiments")
+experiment = Experiment(filepath="C:/dev/neuro-glial-analysis/experiments/exp01.exp")
+snirfs = find_snirf_in_folder(experiment.data_folder)
 
-r1pp = preprocess(r1)
-r2pp = preprocess(r2)
-r3pp = preprocess(r3)
-r4pp = preprocess(r4)
-r5pp = preprocess(r5)
+raw = read_raw_snirf(snirfs[0])
+new_annotations = Annotations(
+    [40, 70, 100], 
+    [8, 8, 8], 
+    ["Right", "Left", "Rest"]
+    )
+raw.set_annotations(new_annotations)
+#annotations.add_annotations(raw, None)
+
+print(raw.subject)
+#raw.plot()
+#plt.show()
 
