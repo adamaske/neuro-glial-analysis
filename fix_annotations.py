@@ -11,6 +11,10 @@ from experiments.experiment import Experiment
 from datasets.fnirs_data import find_snirf_in_folder
 from fnirs_preprocessing import preprocess
 
+#FIXING TRIGGERS FOR THE BALANCE RECORDING ON 8.11.24
+#MOTOR 8x8 Montage was used
+#sample freq = 7.8
+
 # PUTTING MARKERS ONTO OUR DATA -> CALLED ANNOTATIONS IN MNE
 balance_task = read_raw_snirf("data/balance-8-11/balance.snirf")
 sampling_frequency = balance_task.info["sfreq"]

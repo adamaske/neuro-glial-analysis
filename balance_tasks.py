@@ -118,13 +118,13 @@ event_description = ["rest", "right", "rest", "left", "rest", "right", "rest", "
 
 def plot_mean_respones():
     fig, axs =  plt.subplots(1, 1)
-    axs.plot(l_mean_oxy, color="red")
-    axs.plot(l_mean_deoxy, color="blue")
+    axs.plot(l_mean_glm_oxy, color="red")
+    axs.plot(l_mean_glm_deoxy, color="blue")
     axs.legend(["HbO", "HbR", ])
     
     fig, axs =  plt.subplots(1, 1)
-    axs.plot(r_mean_oxy, color="red")
-    axs.plot(r_mean_deoxy, color="blue")
+    axs.plot(r_mean_glm_oxy, color="red")
+    axs.plot(r_mean_glm_deoxy, color="blue")
     axs.legend(["HbO", "HbR"])
 
     #maxs[0].set_ylim(0, 4)
