@@ -4,6 +4,7 @@ import pandas as pd
 from datetime import datetime
 import matplotlib.pyplot as plt
 
+from mne_nirs.io import write_raw_snirf
 from mne.io import read_raw_snirf
 from mne import Annotations
 from experiments.experiment import Experiment
@@ -31,25 +32,23 @@ snirfs = find_snirf_in_folder(data_folder)
 for entry in snirfs:
     print("snirf : ", entry)
 
+# PUTTING MARKERS ONTO OUR DATA -> CALLED ANNOTATIONS IN MNE
 barefoot_thickmat = read_raw_snirf(snirfs[4])
-
 sampling_frequency = barefoot_thickmat.info["sfreq"]
 
-onset = np.array([102, 309, 375, 491, 543, 750, 801, 911, 971, 1164, 1220, 1280, 1320])
-onset_seconds = np.divide(onset, sampling_frequency)
-durations =         [40, 10, 20, 10, 40, 10, 20, 10, 40, 10, 20, 10, 40]
-event_description = ["rest", "right", "rest", "left", "rest", "right", "rest", "left", "rest" , "right", "rest", "left", "rest"]
-
+onset = np.array([102, 309, 375, 491, 543, 750, 801, 911, 971, 1164, 1220, 1320, 1370]) #what frame did each stimuli occur
+onset_seconds = np.divide(onset, sampling_frequency) #turn it into seconds (thats what both mne and satori uses for markers)
+durations = [40, 10, 20, 10, 40, 10, 20, 10, 40, 10, 20, 10, 40] #duration of each stimuli
+event_description = ["rest", "right", "rest", "left", "rest", "right", "rest", "left", "rest" , "right", "rest", "left", "rest"] #order of stimulis / markers
 
 new_annotations = Annotations(onset=onset_seconds,
                               duration=durations,
                               description=event_description)
 barefoot_thickmat.set_annotations(new_annotations)
 
-print("onset: ", onset_seconds)
-barefoot_thickmat.plot()
+#THE SNRIF HAS BEEN RE-ANNOTATED
+write_raw_snirf(barefoot_thickmat, "data/balance-15-11/barefoot_thick_mat.snirf")
 
-plt.show()
 exit()
 #WE WROTE DOWN THE ONSET OF EACH STIMULI WITH A DATAFRAME
 #WE NEED TO TURN THIS INTO SECONDS

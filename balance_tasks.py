@@ -18,11 +18,11 @@ left = []
 right = []
 
 for channel in left_channels:
-    data = np.array(pd.read_csv("data/left_hemisphere/" + channel + ".csv")).transpose()
+    data = np.array(pd.read_csv("data/balance-8-11/left_hemisphere/" + channel + ".csv")).transpose()
     left.append(data)
 
 for channel in right_channels:
-    data = np.array(pd.read_csv("data/right_hemisphere/" + channel + ".csv")).transpose()
+    data = np.array(pd.read_csv("data/balance-8-11/right_hemisphere/" + channel + ".csv")).transpose()
     right.append(data)
 
 left = np.array(left) #left
@@ -110,24 +110,25 @@ r_mean_glm_deoxy  = np.mean([right[0][3],
                              right[8][3],
                              right[9][3]], axis=0)
 
+onset = np.array([190, 500, 584, 745, 848, 1000, 1075, 1230, 1306, 1618, 1709, 1871, 1969]) #what frame did each stimuli occur
+onset_seconds = np.divide(onset, 7.81) #turn it into seconds (thats what both mne and satori uses for markers)
+durations = [40, 10, 20, 10, 20, 10, 20, 10, 40, 10, 20, 10, 40] #duration of each stimuli
+event_description = ["rest", "right", "rest", "left", "rest", "right", "rest", "left", "rest" , "right", "rest", "left", "rest"] #order of stimulis / markers
+
+
 def plot_mean_respones():
-    mfig, maxs =  plt.subplots(1, 2)
-    maxs[0].plot(l_mean_oxy, color="blue")
-    maxs[0].plot(l_mean_deoxy, color="red")
-    maxs[0].legend(["HbO", "HbR", ])
+    fig, axs =  plt.subplots(1, 1)
+    axs.plot(l_mean_oxy, color="red")
+    axs.plot(l_mean_deoxy, color="blue")
+    axs.legend(["HbO", "HbR", ])
+    
+    fig, axs =  plt.subplots(1, 1)
+    axs.plot(r_mean_oxy, color="red")
+    axs.plot(r_mean_deoxy, color="blue")
+    axs.legend(["HbO", "HbR"])
 
-    maxs[1].plot(r_mean_oxy, color="orange")
-    maxs[1].plot(r_mean_deoxy, color="green")
-    maxs[1].legend(["HbO", "HbR"])
-
-    maxs[0].set_ylim(0, 4)
-    maxs[1].set_ylim(0, 4)
-
-
-def inspect_channel(channel_name):
-
-    pass
-
+    #maxs[0].set_ylim(0, 4)
+    #maxs[1].set_ylim(0, 4)
 
 plot_mean_respones()
 

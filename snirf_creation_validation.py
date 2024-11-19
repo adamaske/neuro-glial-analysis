@@ -6,20 +6,19 @@ import snirf
 import matplotlib.pyplot as plt
 
 #VALIDATE DATA ->
-#folder_path = "balance test final"
-#light_intensity = mne.io.read_raw_nirx(folder_path).load_data()
-
+folder_path = "C:/Users/adama/Downloads/2024-09-27/2024-09-27/rec_relax_count_relax"
+light_intensity = mne.io.read_raw_nirx(folder_path).load_data()
 
 #CONVERT TO SNIRF
-#mne_nirs.io.write_raw_snirf(light_intensity, "data/balance.snirf")
+mne_nirs.io.write_raw_snirf(light_intensity, "C:/Users/adama/Downloads/2024-09-27/2024-09-27/dc.snirf")
 
 #LOAD THE SNIRF
-#snirf_intensity = mne.io.read_raw_snirf("data/balance.snirf").load_data()
+snirf_intensity = mne.io.read_raw_snirf("C:/Users/adama/Downloads/2024-09-27/2024-09-27/dc.snirf").load_data()
 
 #VALIDATE THE SNIRF FILE
-#result = snirf.validateSnirf("data/balance.snirf")
-#assert(result.is_valid())
-#result.display()
+result = snirf.validateSnirf("C:/Users/adama/Downloads/2024-09-27/2024-09-27/dc.snirf")
+assert(result.is_valid())
+result.display()
 
 #CONVERT TO OPTICAL DENSITY
 #optical_density = mne.preprocessing.nirs.optical_density(snirf_intensity)
