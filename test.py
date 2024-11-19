@@ -13,6 +13,7 @@ experiment = Experiment(filepath="C:/dev/neuro-glial-analysis/experiments/exp01.
 snirfs = find_snirf_in_folder(experiment.data_folder)
 
 raw = read_raw_snirf(snirfs[0])
+
 new_annotations = Annotations(
     [40, 70, 100], 
     [8, 8, 8], 
@@ -21,7 +22,7 @@ new_annotations = Annotations(
 raw.set_annotations(new_annotations)
 #annotations.add_annotations(raw, None)
 
-print(raw.subject)
+print()
 #raw.plot()
 #plt.show()
 

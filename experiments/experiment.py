@@ -1,20 +1,23 @@
-import json
-from datetime import datetime 
 import os
+import json
 from pathlib import Path
+from datetime import datetime
+ 
 experiment_suffix = ".exp"
+
 class Experiment:
     def __init__(self, **kwargs) -> None:
-        self.name = kwargs.get("name", "Experiment 01")
-        self.time = kwargs.get("time", datetime.now())
-        self.description = kwargs.get("description", "Blank Experiment")
-        self.participants = kwargs.get("participants", ["subject01", "subject02"])
-        self.data_folder = kwargs.get("data_folder", os.getcwd())
-        self.filepath = kwargs.get("filepath", None)
+        self.name = kwargs.get("name", "Experiment 01") #Name of experiment
+        self.time = kwargs.get("time", datetime.now()) #When was it conducted
+        self.description = kwargs.get("description", "Blank Experiment") #More information
+        self.participants = kwargs.get("participants", ["subject01", "subject02"]) #What participants
+        self.data_folder = kwargs.get("data_folder", os.getcwd()) #Where is the files stored
+        self.filepath = kwargs.get("filepath", None) #Where should this be saved
         
-        if self.filepath is not None:
-            self.read_json(self.filepath)
-        pass
+        #if self.filepath is not None:
+        #    self.read_json(self.filepath)
+        #pass
+    
 
     def __repr__(self):
         return f"Experiment : {self.name}\n time : {self.time}\n description : {self.description}\n participants : {self.participants}, data_folder : {self.data_folder}\n filepath : {self.filepath}"

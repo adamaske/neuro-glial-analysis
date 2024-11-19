@@ -6,3 +6,4 @@ mne-nirs
 matplotlib
 snirf
 nilearn
+pylsl
