@@ -18,8 +18,8 @@ def validate_snirf(snirf):
         result.display()
         return result.is_valid()
     
-    temp_filepath = "temp/filepath" 
-    write_raw_snirf(snirf, "temporary.snirf")
+    temp_filepath = "temp/temporary.snirf" 
+    write_raw_snirf(snirf, temp_filepath)
     print("Validation : Created temporary file : ", temp_filepath)
     
     result = validateSnirf(temp_filepath)

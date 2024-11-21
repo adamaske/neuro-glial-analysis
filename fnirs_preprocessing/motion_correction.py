@@ -13,5 +13,5 @@ def motion_correction(snirf):
         raw (): mne.raw snirf object with baseline
     
     """
-    corrected = temporal_derivative_distribution_repair(snirf)
+    corrected = temporal_derivative_distribution_repair(snirf.copy())
     return corrected

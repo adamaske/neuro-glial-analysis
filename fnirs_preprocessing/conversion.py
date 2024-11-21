@@ -2,7 +2,7 @@ from mne.io import read_raw_snirf
 from mne_nirs.io import write_raw_snirf
 from mne.preprocessing.nirs import optical_density, beer_lambert_law
 from os.path import split, splitext, join
-from validation import validate_snirf
+from fnirs_preprocessing.validation import validate_snirf
 
 def light_intensity_to_optical_density(snirf):
     """
@@ -91,7 +91,7 @@ def optical_density_to_hemoglobin_concentration(od):
         print("Invalid snirf object, returning original snirf object : optical_density_to_hemoglobin_concentration, ", __file__)
         return od
 
-    hb = optical_density(od)
+    hb = beer_lambert_law(od)
     hb_is_valid = validate_snirf(hb)
     if not hb_is_valid:
             print("An error occured in hemoglobin conversion, returning original snrif object : optical_density_to_hemoglobin_concentration, ", __file__)
