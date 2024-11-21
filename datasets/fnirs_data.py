@@ -15,6 +15,13 @@ def is_snirf_file(file_path): #Check for snirf file
     return result.is_valid()
 
 def find_snirf_in_folder(folder_path):
+    """
+    Locate all .snirf files in directory and subdirectories. 
+    Args:
+        folder_path (str) : Path to directory.
+    Returns:
+        snirf_paths (list) : List containg filepaths to all located .snrif files.
+    """
     snirf_paths = []
     for entry in os.listdir(folder_path):
         entry_path = os.path.join(folder_path, entry)
