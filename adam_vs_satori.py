@@ -14,7 +14,7 @@ un_preprocessed_filepath = "C:/dev/neuro-glial-analysis/data/balance-22-11/2024-
 
 #File preprocssed from by Satori
 satori_filepath = "C:/dev/neuro-glial-analysis/data/balance-22-11/2024-11-22_003/satori-preprocessed/2024-11-22_003_wl_preprocessed.snirf"
-#satori = read_raw_snirf(satori_filepath).load_data()
+satori = read_raw_snirf(satori_filepath).load_data()
 validate_snirf(satori_filepath)
 exit()
 
