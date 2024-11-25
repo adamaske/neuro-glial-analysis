@@ -57,3 +57,16 @@ def load_experiments(folder_path):
             experiments.append(Experiment(filepath=entry_path))
     return experiments
 
+def create_experiment():
+
+    experiment = Experiment()
+
+    
+    name = input("Name of experiment : ")
+
+    description = input("Description : ")
+
+    time = datetime.now()
+
+    
+    return experiment

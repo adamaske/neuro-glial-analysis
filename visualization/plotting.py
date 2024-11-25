@@ -1,7 +1,6 @@
 import matplotlib.pyplot as plt
-
-
 from mne.io.snirf._snirf import RawSNIRF
+
 def visualize_snirf(snirf):
 
     pass
