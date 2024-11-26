@@ -2,7 +2,24 @@ from mne.io.snirf._snirf import RawSNIRF
 from mne.filter import filter_data
 import numpy as np
 
-def filter(snirf:RawSNIRF) -> RawSNIRF:
+def z_normalize():
+    import numpy as np
+
+    # Example time series
+    time_series = np.array([10, 20, 15, 25, 30])
+
+    # Calculate mean and standard deviation
+    mean = np.mean(time_series)
+    std = np.std(time_series)
+
+    # Z-normalize the time series
+    z_normalized_series = (time_series - mean) / std
+
+    print("Original time series:", time_series)
+    print("Z-normalized time series:", z_normalized_series)
+    pass
+
+def filter_snirf(snirf:RawSNIRF) -> RawSNIRF:
     """
     Frequency filtering of fNIRS data. Filter design based on Pinti et al. 2019. 
     Bandpass : F_low = 0.01,  F_stim < F_high < F_mayer (> 0.06).
@@ -32,10 +49,10 @@ def filter(snirf:RawSNIRF) -> RawSNIRF:
     #                            filter_length=)
     
     filtered = snirf.copy().filter(l_freq=0.01,
-                            h_freq=0.09, 
+                            h_freq=0.07, 
                             picks='all',
                             method='fir',
-
+                            filter_length=200,
                             )
 
 
