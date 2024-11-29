@@ -1,7 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.signal import butter, lfilter,freqz
-
+from scipy.signal import freqz, sosfreqz
 
 def compute_fft(time_series, fs, freq_limit:float|None):
     # Compute FFT
@@ -24,7 +23,7 @@ def compute_fft(time_series, fs, freq_limit:float|None):
 
 def compute_psd(time_series, fs, freq_limit:float|None):
     # Compute FFT
-    freqs, spectrum = compute_fft(time_series, freq_limit)
+    freqs, spectrum = compute_fft(time_series, fs, freq_limit)
     # Normalize to get power spectral density
     psd = np.square(spectrum) / (fs * len(time_series))  
     # Double the PSD for one-sided spectrum (except at DC and Nyquist)
@@ -38,5 +37,11 @@ def display_fft(frequencies, spectrum):
 
 def plot_frequency_response(b, a, fs, worN=512):
     w, h = freqz(b, a, fs=fs, worN=512)
+    plt.plot(w, abs(h))
+    return
+
+
+def plot_sos_frequency_response(sos, fs, worN=512):
+    w, h = sosfreqz(sos,worN=worN, whole=True,fs=fs)
     plt.plot(w, abs(h))
     return

@@ -1,6 +1,7 @@
 import numpy as np
 from scipy.signal import butter, lfilter
 from mne.io.snirf._snirf import RawSNIRF
+from scipy.signal import butter, freqz, sosfreqz, sosfilt, sosfiltfilt
 
 def z_normalize():
     import numpy as np
@@ -19,12 +20,17 @@ def z_normalize():
     print("Z-normalized time series:", z_normalized_series)
     pass
 
-def butter_bandpass(lowcut, highcut, fs, order):
-    return butter(order, [lowcut, highcut], fs=fs, btype='bandpass')
+def butter_bandpass(lowcut, highcut, fs, freqs=512, order=3):
+    nyq = 0.5 * fs
+    low = lowcut / nyq
+    high = highcut / nyq
+    sos = butter(order, [low, high], btype='band', output='sos')
+    w, h = sosfreqz(sos, worN=2000, whole=True, fs=fs)
+    return sos, w, h
 
-def butter_bandpass_filter(data, lowcut, highcut, fs, order):
-    b, a = butter_bandpass(lowcut, highcut, fs, order=order)
-    y = lfilter(b, a, data)
+def butter_bandpass_filter(time_series, lowcut, highcut, fs, order):
+    sos, w, h = butter_bandpass(lowcut, highcut, fs, order=order)
+    y = sosfiltfilt(sos, time_series)
     return y
 
 def digital_bandpass_filter(snirf:str|RawSNIRF, lowcut=0.01, highcut=0.1, order=5) -> RawSNIRF|str:
@@ -45,7 +51,9 @@ def digital_bandpass_filter(snirf:str|RawSNIRF, lowcut=0.01, highcut=0.1, order=
      
     if isinstance(snirf, str):#load filepath
         pass
-        
+    
+    #array object of all channels
+    data = np.array()
     sampling_frequency = snirf.info["sfreq"]
     
     #Z-Normalization
@@ -61,6 +69,7 @@ def digital_bandpass_filter(snirf:str|RawSNIRF, lowcut=0.01, highcut=0.1, order=
     ##                     picks=None,
     ##                     filter_length=101)
     
+    #insert numpy array into snirf file. 
     filtered = snirf.copy().filter(l_freq=0.01,
                             h_freq=0.07, 
                             picks='all',
