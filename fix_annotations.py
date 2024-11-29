@@ -9,7 +9,7 @@ from mne.io import read_raw_snirf
 from mne import Annotations
 from experiments.experiment import Experiment
 from datasets.fnirs_data import find_snirf_in_folder
-from fnirs_preprocessing import preprocess
+from preprocessing import preprocess
 
 #FIXING TRIGGERS FOR THE BALANCE RECORDING ON 8.11.24
 #MOTOR 8x8 Montage was used

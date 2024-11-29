@@ -1,55 +1,60 @@
-from fnirs_preprocessing.validation import validate_snirf 
-from fnirs_preprocessing.conversion import light_intensity_to_hemoglobin_concentration
-from fnirs_preprocessing.motion_correction import motion_correction
-from fnirs_preprocessing.filtering import filter_snirf
+from preprocessing.fnirs.validation import validate_snirf 
+from preprocessing.fnirs.conversion import light_intensity_to_hemoglobin_concentration
+from preprocessing.fnirs.motion_correction import motion_correction
+from preprocessing.fnirs.filtering import digital_bandpass_filter
 from visualization.plotting import plot_raw_channels
 from mne.io import read_raw_snirf
 from mne_nirs.io import write_raw_snirf
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from scipy.signal import butter, lfilter,freqz
+from scipy.signal import butter, lfilter,freqz, filtfilt
 
 
 #Raw file
 un_preprocessed_filepath = "C:/dev/neuro-glial-analysis/data/balance-22-11/2024-11-22_003/2024-11-22_003.snirf"
 
 #File preprocssed from by Satori
-#satori_filepath = "C:/dev/neuro-glial-analysis/data/balance-22-11/2024-11-22_003/satori-preprocessed/2024-11-22_003_CV10p_SRi10l5t3p5I0p5MON_TDDRHF_THPBW0p01s_TDTS0p4s_ZNORM.snirf"
-#satori = read_raw_snirf(satori_filepath).load_data()
+satori_filepath = "C:/dev/neuro-glial-analysis/data/balance-22-11/2024-11-22_003/satori-preprocessed/2024-11-22_003_CV10p_SRi10l5t3p5I0p5MON_TDDRHF_THPBW0p01s_TDTS0p4s_ZNORM.snirf"
+#satori = read_raw_snirf(satori_filepath)
 #validate_snirf(satori_filepath)
 
 adam_preprocssed_filepath = "C:/dev/neuro-glial-analysis/data/balance-22-11/2024-11-22_003/adam-preprocessed/2024-11-22_003_ADAM-PREPROCSSED.snirf"
 
 raw = read_raw_snirf(un_preprocessed_filepath).load_data()
+#raw_data = np.array(raw.get_data())
+fs = raw.info["sfreq"]
 
-hm = light_intensity_to_hemoglobin_concentration(raw)
-hm = filter_snirf(hm)
-fs = hm.info["sfreq"]
+hb = light_intensity_to_hemoglobin_concentration(raw)
+#hb = filter_snirf(hb)
+hb_data = np.array(hb.get_data())
 
-hm_data = np.array(hm.get_data())
-raw_data = np.array(raw.get_data())
-
-#CASES
+#Satori Preprocessed S1-D1
 s1d1_satori = np.array(pd.read_csv(
     "C:/dev/neuro-glial-analysis\data/balance-22-11/2024-11-22_003/satori-preprocessed\s1d1_satori_cc_001_007_znorm.csv")
                        ).transpose()[0] #0th channel is s1d1 oxy
-#s1d1_satori = (s1d1_satori - np.mean(s1d1_satori)) / np.std(s1d1_satori)#z-normalization
+#Custom Preprocessing
+s1d1_data = np.array(hb_data[0][:-1]) 
 
-
-s1d1_data = np.array(hm_data[0][:-1]) #adjust for different lengths
-s1d1_data = (s1d1_data - np.mean(s1d1_data)) / np.std(s1d1_data)#z-nromailzation
+# Z-Normalization
+#s1d1_data = (s1d1_data - np.mean(s1d1_data)) / np.std(s1d1_data)
 
 def butter_bandpass(lowcut, highcut, fs, order):
-    return butter(order, [lowcut, highcut], fs=fs, btype='bandpass')
+    return butter(order, [lowcut, highcut], btype='bandpass')
 
 def butter_bandpass_filter(data, lowcut, highcut, fs, order):
     b, a = butter_bandpass(lowcut, highcut, fs, order=order)
     y = lfilter(b, a, data)
     return y
-use_order = 200
-custom_filtered_data = butter_bandpass_filter(s1d1_data, 0.01, 0.07, hm.info["sfreq"], use_order)
 
+fs = hb.info["sfreq"]
+nq = fs * 0.5
+n_order = 50
+f_low = 0.01
+f_high = 0.1
+b, a = butter_bandpass(lowcut=f_low, highcut=f_high, fs=fs, order=n_order)
+custom_filtered_data = butter_bandpass_filter(s1d1_data, f_low, f_high, fs, n_order)
+custom_filtered_data = filtfilt(b, a, s1d1_data)
 
 def compute_fft(time_series, freq_limit:int|None):
     # Compute FFT
@@ -80,20 +85,14 @@ def compute_psd(time_series, freq_limit):
     return freqs, psd
 
 def display_frequency_response():
-    order_file = 300
     # Plot the frequency response for a few different orders.
     fig, axs = plt.subplots()
-    fig.suptitle(f"{order_file}th \n@ fs=5 Hz, lowcut=0.01 Hz highcut=0.07")
-    b100, a100 = butter_bandpass(lowcut=0.01, highcut=0.07, fs=5, order=order_file)
-
-    w, h = freqz(b100, a100, fs=fs, worN=2000)
-    plt.plot(w, abs(h))
-    plt.show()
-    #w, h = freqz(b50, a50, fs=fs, worN=2000)
-    #plt.plot(w, abs(h))
-    #w, h = freqz(b100, a100, fs=fs, worN=2000)
-    #plt.plot(w, abs(h))
-    #fig.legend(["n=5", "n=50", "n=100"])
+    fig.suptitle(f"{n_order}th \n@ fs={fs} Hz, lowcut={f_low} Hz highcut={f_high}")
+    
+    b, a = butter_bandpass(lowcut=f_low, highcut=f_high, fs=fs, order=n_order)
+    w, h = freqz(b, a, fs=fs, worN=512)
+    axs.plot(w, abs(h))
+    
 
 def display_time_series_custom():
     fig, axs = plt.subplots(1, 2)
@@ -102,11 +101,11 @@ def display_time_series_custom():
     axs[1].plot(s1d1_satori, color="red")
     axs[1].set_title("S1-D1 HbO (Satori)")
     fig.legend(["Pinti", "Satori"])
-    fig.suptitle(f"Pinti Method BP @ 0.01 - 0.07 Hz n={use_order} Z-Normalized vs Pre-Processed Satori BP @ 0.01 - 0.07 Hz Z-Normalized : Hemoglobin Concentration ")
+    fig.suptitle(f"Pinti Method BP @ {f_low} - {f_high} Hz n={n_order} Z-Normalized vs Pre-Processed Satori BP @ 0.01 - 0.07 Hz Z-Normalized : Hemoglobin Concentration ")
 
 def display_frequency_spectra_custom(freq_limit):
-    mne_freqs, mne_spectrum = compute_fft(custom_filtered_data, freq_limit)
-    satori_freqs, satori_spectrum = compute_fft(s1d1_satori, freq_limit)
+    mne_freqs, mne_spectrum = compute_psd(custom_filtered_data, freq_limit)
+    satori_freqs, satori_spectrum = compute_psd(s1d1_satori, freq_limit)
 
     fig, axs = plt.subplots(1, 2)
     axs[0].plot(mne_freqs, mne_spectrum, color="green")
@@ -115,7 +114,7 @@ def display_frequency_spectra_custom(freq_limit):
     axs[1].set_title("S1-D1 HbO PSD (Satori)")
 
     fig.legend(["Pinti", "Satori"])
-    fig.suptitle(f"Power Spectral Density : \nPinti Method BP @ 0.01 - 0.07 Hz n={use_order} Z-Normalized vs Pre-Processed Satori BP @ 0.01 - 0.07 Hz Z-Normalized ")
+    fig.suptitle(f"Power Spectral Density : \nPinti Method BP @ {f_low} - {f_high} Hz n={n_order} Z-Normalized vs Pre-Processed Satori BP @ 0.01 - 0.07 Hz Z-Normalized ")
 
 
 def display_time_series():
@@ -126,7 +125,6 @@ def display_time_series():
     axs[1].set_title("S1-D1 HbO (Satori)")
     fig.legend(["MNE", "Satori"])
     fig.suptitle("Pre-Processed MNE BP @ 0.01 - 0.07 Hz Z-Normalized vs Pre-Processed Satori BP @ 0.01 - 0.07 Hz Z-Normalized : Hemoglobin Concentration ")
-
 
 def display_frequency_spectra(freq_limit):
     mne_freqs, mne_spectrum = compute_psd(s1d1_data, freq_limit)
@@ -141,11 +139,11 @@ def display_frequency_spectra(freq_limit):
     fig.legend(["MNE", "Satori"])
     fig.suptitle("Power Spectral Density : \nPre-Processed MNE BP @ 0.01 - 0.07 Hz Z-Normalized vs Pre-Processed Satori BP @ 0.01 - 0.07 Hz Z-Normalized ")
 
-#display_time_series_custom()
-#display_frequency_spectra_custom(0.2)
-#display_frequency_response()
-display_time_series()
-display_frequency_spectra()
+display_time_series_custom()
+display_frequency_spectra_custom(0.2)
+display_frequency_response()
+#display_time_series()
+#display_frequency_spectra()
 plt.show()
 exit()
 #To OD & Hb
