@@ -123,7 +123,7 @@ def plot_mean_respones():
     axs.legend(["HbO", "HbR", ])
     
     fig, axs =  plt.subplots(1, 1)
-    axs.plot(r_mean_glm_oxy, color="red")
+    axs.plot(r_mean_glm_oxy, color="blue")
     axs.plot(r_mean_glm_deoxy, color="blue")
     axs.legend(["HbO", "HbR"])
 
