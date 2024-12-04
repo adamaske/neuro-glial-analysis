@@ -5,6 +5,7 @@ from preprocessing.fnirs.conversion import csv_to_snirf
 
 sampling_frequency = 10
 
+channel_names = []
 csv_to_snirf(0,0,0, sampling_frequency)
 
 

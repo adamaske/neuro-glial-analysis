@@ -9,8 +9,17 @@ from mne.io import read_raw_snirf
 from mne import Annotations
 from experiments.experiment import Experiment
 from datasets.fnirs_data import find_snirf_in_folder
-from preprocessing import preprocess
 
+#THE SNRIF HAS BEEN RE-ANNOTATED
+balance_task = read_raw_snirf( "data/balance-8-11/balance_task_with_triggers.snirf")
+annos = balance_task._annotations
+desc = balance_task.annotations.description
+onset = balance_task.annotations.onset
+durations = balance_task.annotations.duration
+print(onset)
+print(desc)
+print(durations)
+exit()
 #FIXING TRIGGERS FOR THE BALANCE RECORDING ON 8.11.24
 #MOTOR 8x8 Montage was used
 #sample freq = 7.8
