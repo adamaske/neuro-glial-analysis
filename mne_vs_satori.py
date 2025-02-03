@@ -3,7 +3,7 @@ from preprocessing.fnirs.conversion import light_intensity_to_hemoglobin_concent
 from preprocessing.fnirs.motion_correction import motion_correction
 from visualization.plotting import plot_raw_channels
 from preprocessing.fnirs.filtering import butter_bandpass, butter_bandpass_filter
-from analysis.frequencies import compute_fft, compute_psd, plot_sos_frequency_response
+from analysis.fnirs.frequencies import compute_fft, compute_psd, plot_sos_frequency_response
 from mne.io import read_raw_snirf
 from mne_nirs.io import write_raw_snirf
 import matplotlib.pyplot as plt
