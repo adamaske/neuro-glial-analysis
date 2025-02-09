@@ -2,7 +2,8 @@ import pathlib
 import os 
 import snirf
 
-from mne.io import read_raw_snirf
+from mne.io import read_raw_eeglab
+
 from preprocessing.fnirs.validation import validate_snirf
 from mne.io.snirf._snirf import RawSNIRF
 
