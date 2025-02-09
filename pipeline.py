@@ -1,35 +1,13 @@
-#find all snirf files in a given directory and subdirectories
 
-from datasets.fnirs_data import find_snirf_in_folder
+# Load all files
+from datasets.fnirs import read_snirf, find_snirf_in_folder
+from preprocess import preprocess_snirf
+from visualization.fnirs import plot_snirf, plot_psd_snirf
 
-from mne.io import read_raw_snirf
+filepaths = find_snirf_in_folder("data/OMID-13-12-024")
+files = [read_snirf(f) for f in filepaths]
 
-from preprocessing.fnirs.conversion import light_intensity_to_hemoglobin_concentration
+preprocessed = [preprocess_snirf(f) for f in files]
 
-from os.path import split, splitext, join
-import numpy as np
-
-folder_path = "data/OMID-13-12-024"
-snirf_filepaths = find_snirf_in_folder(folder_path)
-
-for path in snirf_filepaths:
-    dir, name = split(path)
-    snirf = read_raw_snirf(path).load_data()
-    print(f"Loaded SNIRF : {name}")
-    print(snirf.info)
-        
-    #hb = light_intensity_to_hemoglobin_concentration(hb)
-    
-    data = np.array(snirf.get_data())
-    
-    print("Data : ", data.shape)
-    
-
-def preprocess_snirf_files():
-    
-    
-    
-    pass
-    
-    
-
+[plot_snirf(f) for f in preprocessed]
+[plot_psd_snirf(f) for f in preprocessed]

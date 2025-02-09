@@ -31,51 +31,31 @@ def butter_bandpass(lowcut, highcut, fs, freqs=512, order=3):
 def butter_bandpass_filter(time_series, lowcut, highcut, fs, order):
     sos, w, h = butter_bandpass(lowcut, highcut, fs, order=order)
     y = sosfiltfilt(sos, time_series)
-    return y
+    return np.array(y)
 
-def digital_bandpass_filter(snirf:str|RawSNIRF, lowcut=0.01, highcut=0.1, order=5) -> RawSNIRF|str:
+def bandpass_filter_snirf(snirf:RawSNIRF, l_freq=0.01, h_freq=0.1, n=5) -> RawSNIRF:
     """
-    Frequency filtering of fNIRS data. Filter design based on Pinti et al. 2019. 
-    Bandpass : F_low = 0.01,  F_stim < F_high < F_mayer (> 0.06).
-    PS: This means stimulation frequency must be minimum 16.5 seconds.  
-    This method removes heartbeat, breathing, mayer waves and instrumental noise (and low frequency vasomotor oscilations).
+    Applies a digital bandpass filter to all channels. Returns filtered snirf object. 
+    
     Args:
-        snirf (mne.raw or str) : Either mne.raw snirf object or filepath to ".snirf" file. 
-        artefacts (list) : What artefacts to filter out "heartbeat", "mayer", "breathing"
+        snirf (RawSNIRF) : RawSNIRF object
+        l_freq : Lowcut frequency, the lower edge of passband
+        h_freq : Highcut frequency, the high edge of passband  
+        n : Filter order, higher means small transition band
+        
     Returns:
-        filtered (mne.raw or str) : Either mne.raw snirf object or filepath to filtered ".snirf" file. 
+        filtered (RawSNIRF) : New RawSNIRF object with filtered channels
     """
-    
-    if not isinstance(snirf, str) or not isinstance(snirf, RawSNIRF):
-        raise TypeError("Object must be of type str or RawSNIRF...")
-     
-    if isinstance(snirf, str):#load filepath
-        pass
-    
-    #array object of all channels
-    data = np.array()
-    sampling_frequency = snirf.info["sfreq"]
-    
-    #Z-Normalization
-    
-    #Digital Filter
-    b, a = butter_bandpass(lowcut, highcut, sampling_frequency, order)
-    
-    #data = np.array(snirf.get_data())
-    ##filter = filter_data(data=data, 
-    ##                     sfreq=sampling_frequency,
-    ##                     l_freq=0.01,
-    ##                     h_freq=0.07,
-    ##                     picks=None,
-    ##                     filter_length=101)
-    
-    #insert numpy array into snirf file. 
-    filtered = snirf.copy().filter(l_freq=0.01,
-                            h_freq=0.07, 
-                            picks='all',
-                            method='fir',
-                            filter_length=200,
-                            )
 
+    channels = snirf.get_data()
+    s_freq = snirf.info["sfreq"]
+
+    filtered_channels = np.zeros_like(channels)  # Ensures matching shape and type
+
+    for idx in range(channels.shape[0]):  # Iterate over each channel
+        filtered_channels[idx] = butter_bandpass_filter(channels[idx], l_freq, h_freq, s_freq, n)
+
+    filtered = snirf.copy()
+    filtered._data = filtered_channels.astype(np.float64)  # Ensure proper update
 
     return filtered

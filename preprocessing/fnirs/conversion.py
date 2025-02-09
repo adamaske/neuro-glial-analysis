@@ -9,6 +9,7 @@ from preprocessing.fnirs.validation import validate_snirf
 from mne import create_info
 from mne.channels import make_standard_montage
 from mne.io import RawArray
+from mne.io.snirf._snirf import RawSNIRF
 
 import matplotlib.pyplot as plt
 def csv_to_snirf(csv_filepath, channel_names, channel_types, sampling_frequency):
@@ -43,8 +44,9 @@ def csv_to_snirf(csv_filepath, channel_names, channel_types, sampling_frequency)
     plt.show()
     return
 
+    
 
-def light_intensity_to_optical_density(snirf):
+def light_intensity_to_optical_density(snirf) -> "RawSNIRF":
     """
     Convert raw light intensity data to optical density. Handles both mne raw snirf objects and filepath to snirf file.
 
@@ -62,38 +64,38 @@ def light_intensity_to_optical_density(snirf):
         new_path = join(directory, new_filename)
 
         light_intensity = read_raw_snirf(snirf)
-        is_valid = validate_snirf(light_intensity)
-        if not is_valid:
-            print("Invalid snirf object, returning original filepath : light_intensity_to_optical_density, ", __file__)
-            return snirf
+        #is_valid = validate_snirf(light_intensity)
+        #if not is_valid:
+        #    print("Invalid snirf object, returning original filepath : light_intensity_to_optical_density, ", __file__)
+        #    return snirf
         
         od = optical_density(light_intensity)
-        od_valid = validate_snirf(od_valid)
-        if not od_valid:
-            print("An error occured in optical density conversion, returning original filepath : light_intensity_to_optical_density, ", __file__)
-            return snirf
+        #od_valid = validate_snirf(od_valid)
+        #if not od_valid:
+        #    print("An error occured in optical density conversion, returning original filepath : light_intensity_to_optical_density, ", __file__)
+        #    return snirf
         
         write_raw_snirf(od, new_path)
         print(f"Optical density conversion succeeded, new filepath : {new_path}")
         return new_path
         
-    is_valid = validate_snirf(snirf)
-    if not is_valid:
-        print("Invalid snirf object, returning original snirf object : light_intensity_to_optical_density, ", __file__)
-        return snirf
+    #is_valid = validate_snirf(snirf)
+    #if not is_valid:
+    #    print("Invalid snirf object, returning original snirf object : light_intensity_to_optical_density, ", __file__)
+    #    return snirf
 
     od = optical_density(snirf)
-    od_valid = validate_snirf(od)
-    if not od_valid:
-            print("An error occured in optical density conversion, returning original snrif object : light_intensity_to_optical_density, ", __file__)
-            return snirf
+    #od_valid = validate_snirf(od)
+    #if not od_valid:
+    #        print("An error occured in optical density conversion, returning original snrif object : light_intensity_to_optical_density, ", __file__)
+    #        return snirf
     
     print(f"Optical density conversion succeeded, new snirf object : ")
     print(od.info)
     return od
 
 
-def optical_density_to_hemoglobin_concentration(od):
+def optical_density_to_hemoglobin_concentration(od) -> "RawSNIRF":
     """
     Convert optical density data to hemoglobin concentration. Handles both mne raw snirf objects and filepath to snirf file.
 
@@ -111,31 +113,31 @@ def optical_density_to_hemoglobin_concentration(od):
         new_path = join(directory, new_filename)
 
         od = read_raw_snirf(od)
-        is_valid = validate_snirf(od)
-        if not is_valid:
-            print("Invalid optical density snirf object, returning original filepath : optical_density_to_hemoglobin_concentration, ", __file__)
-            return od
+        #is_valid = validate_snirf(od)
+        #if not is_valid:
+        #    print("Invalid optical density snirf object, returning original filepath : optical_density_to_hemoglobin_concentration, ", __file__)
+        #    return od
         
         hb = beer_lambert_law(od)
-        hb_is_valid = validate_snirf(hb)
-        if not hb_is_valid:
-            print("An error occured in hemoglobin conversion, returning original filepath : optical_density_to_hemoglobin_concentration, ", __file__)
-            return od
+        #hb_is_valid = validate_snirf(hb)
+        #if not hb_is_valid:
+        #    print("An error occured in hemoglobin conversion, returning original filepath : optical_density_to_hemoglobin_concentration, ", __file__)
+        #    return od
         
         write_raw_snirf(hb, new_path)
         print(f"Hemoglobin conversion succeeded, new filepath : {new_path}")
         return new_path
         
-    is_valid = validate_snirf(od)
-    if not is_valid:
-        print("Invalid snirf object, returning original snirf object : optical_density_to_hemoglobin_concentration, ", __file__)
-        return od
+    #is_valid = validate_snirf(od)
+    #if not is_valid:
+    #    print("Invalid snirf object, returning original snirf object : optical_density_to_hemoglobin_concentration, ", __file__)
+    #    return od
 
     hb = beer_lambert_law(od)
-    hb_is_valid = validate_snirf(hb)
-    if not hb_is_valid:
-            print("An error occured in hemoglobin conversion, returning original snrif object : optical_density_to_hemoglobin_concentration, ", __file__)
-            return od
+    #hb_is_valid = validate_snirf(hb)
+    #if not hb_is_valid:
+    #        print("An error occured in hemoglobin conversion, returning original snrif object : optical_density_to_hemoglobin_concentration, ", __file__)
+    #        return od
     
     print(f"Optical density conversion succeeded, new snirf object : ")
     print(hb.info)

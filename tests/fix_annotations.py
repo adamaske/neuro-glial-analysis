@@ -7,7 +7,6 @@ import matplotlib.pyplot as plt
 from mne_nirs.io import write_raw_snirf
 from mne.io import read_raw_snirf
 from mne import Annotations
-from experiments.experiment import Experiment
 from datasets.fnirs_data import find_snirf_in_folder
 
 #THE SNRIF HAS BEEN RE-ANNOTATED

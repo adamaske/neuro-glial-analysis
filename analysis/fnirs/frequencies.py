@@ -45,3 +45,9 @@ def plot_sos_frequency_response(sos, fs, worN=512):
     w, h = sosfreqz(sos,worN=worN, whole=True,fs=fs)
     plt.plot(w, abs(h))
     return
+
+def channel_wavelet_transform():
+    
+    
+    
+    pass
