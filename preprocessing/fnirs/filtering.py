@@ -25,7 +25,7 @@ def butter_bandpass(lowcut, highcut, fs, freqs=512, order=3):
     low = lowcut / nyq
     high = highcut / nyq
     sos = butter(order, [low, high], btype='band', output='sos')
-    w, h = sosfreqz(sos, worN=2000, whole=True, fs=fs)
+    w, h = sosfreqz(sos, worN=None, whole=True, fs=fs)
     return sos, w, h
 
 def butter_bandpass_filter(time_series, lowcut, highcut, fs, order):
