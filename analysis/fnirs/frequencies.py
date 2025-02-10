@@ -6,7 +6,7 @@ def compute_fft(time_series, fs, freq_limit:float|None):
     # Compute FFT
     N = len(time_series)  # Length of the signal
     fft_result = np.fft.fft(time_series)
-    fft_freq = np.fft.fftfreq(N, d=1)#/fs)  # Frequency axis
+    fft_freq = np.fft.fftfreq(N, d=1/fs)#/fs)  # Frequency axis
 
     # Take the positive half of the spectrum
     positive_freqs = fft_freq[:N // 2]

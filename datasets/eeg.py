@@ -1,68 +1,42 @@
-import pathlib
-import os 
-import snirf
+import h5py
+import numpy as np
+from scipy.signal import butter, filtfilt, iirnotch
 
-from mne.io import read_raw_eeglab
+def bandpass_filter(data, sfreq, low_freq=1, high_freq=100, order=4):
+    """Apply a bandpass filter to EEG data."""
+    nyquist = 0.5 * sfreq
+    low = low_freq / nyquist
+    high = high_freq / nyquist
+    b, a = butter(order, [low, high], btype='band')
+    return filtfilt(b, a, data, axis=-1)
 
-from preprocessing.fnirs.validation import validate_snirf
-from mne.io.snirf._snirf import RawSNIRF
+def notch_filter(data, sfreq, freqs=[50, 60]):
+    """Apply notch filters at specified frequencies."""
+    for freq in freqs:
+        b, a = iirnotch(freq, 30, sfreq)
+        data = filtfilt(b, a, data, axis=-1)
+    return data
 
-dir_path = os.path.dirname(os.path.realpath(__file__)) #path of this file
-
-def is_snirf_file(filepath): #Check for snirf file
-   return pathlib.Path(filepath).suffix == '.snirf'
-
-
-def validate_snirf_files(files):
+def process_eeg_hdf5(file_path, output_path):
+    """Load EEG data from HDF5, filter it, and save the result."""
     
-    
-    return 0
+    with h5py.File(file_path, 'r') as f:
+        sfreq = f['sfreq'][()]  # Sampling frequency
+        eeg_data = f['eeg_data'][()]  # EEG data (channels x time)
 
-def read_snirf(filepath:str) -> "RawSNIRF":
-    """
-    Load a .snirf file into a RawSNIRF object and validates it. 
-    
-    Args:
-        filepath : str
-        
-    Returns:
-        snirf : RawSNIRF object
-    
-    """
-    snirf = read_raw_snirf(filepath)
-    
-    valid = validate_snirf(snirf)
-    if not valid:
-        print("read_snirf : Invalid snirf object @ ", __file__)
-        return None
-    
-    return snirf
+    # Apply bandpass and notch filters
+    filtered_data = bandpass_filter(eeg_data, sfreq)
+    filtered_data = notch_filter(filtered_data, sfreq)
 
+    # Save filtered EEG data
+    with h5py.File(output_path, 'w') as f_out:
+        f_out.create_dataset('eeg_data', data=filtered_data)
+        f_out.create_dataset('sfreq', data=sfreq)  # Save sampling frequency as well
 
-def find_snirf_in_folder(folder_path):
-    """
-    Locate all .snirf files in directory and subdirectories. 
-    Args:
-        folder_path (str) : Path to directory.
-    Returns:
-        paths (array:str) : All filepaths
-        snirfs (array:RawSNIRF) : Loaded snirf objects
-    """
-    paths = []
-    for entry in os.listdir(folder_path):
-        entry_path = os.path.join(folder_path, entry)
+    print(f"Filtered EEG data saved to {output_path}")
 
-        if os.path.isdir(entry_path):# is this a folder?
-            snirfs = find_snirf_in_folder(entry_path)
-            for file in snirfs:
-                paths.append(file)
-            continue
-
-        if is_snirf_file(entry_path): #is this a snirf file?
-            paths.append(entry_path)
-            
-    snirfs = []
-    for path in paths:
-        snirfs.append(read_snirf(path))
-        
-    return paths, snirfs
+# Example usage
+if __name__ == "__main__":
+    input_file = "raw_eeg.hdf5"
+    output_file = "filtered_eeg.hdf5"
+    process_eeg_hdf5(input_file, output_file)

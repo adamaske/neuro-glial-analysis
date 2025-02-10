@@ -5,6 +5,9 @@ import snirf
 from mne.io import read_raw_snirf
 from preprocessing.fnirs.validation import validate_snirf
 from mne.io.snirf._snirf import RawSNIRF
+from mne_nirs.io import write_raw_snirf
+
+import logging
 
 dir_path = os.path.dirname(os.path.realpath(__file__)) #path of this file
 
@@ -16,6 +19,7 @@ def validate_snirf_files(files):
     
     
     return 0
+
 
 def read_snirf(filepath:str) -> "RawSNIRF":
     """
@@ -30,12 +34,17 @@ def read_snirf(filepath:str) -> "RawSNIRF":
     """
     snirf = read_raw_snirf(filepath)
     
-    valid = validate_snirf(snirf)
-    if not valid:
-        print("read_snirf : Invalid snirf object @ ", __file__)
-        return None
+    #valid = validate_snirf(snirf)
+    #if not valid:
+    #    print("read_snirf : Invalid snirf object @ ", __file__)
+    #    return None
     
     return snirf
+
+def write_snirf(snirf:RawSNIRF, filepath:str) -> str:
+    write_raw_snirf(snirf, filepath)
+    logging.info(f"Wrote .sNIRF : {filepath}")
+
 
 
 def find_snirf_in_folder(folder_path):
@@ -52,9 +61,9 @@ def find_snirf_in_folder(folder_path):
         entry_path = os.path.join(folder_path, entry)
 
         if os.path.isdir(entry_path):# is this a folder?
-            snirfs = find_snirf_in_folder(entry_path)
-            for file in snirfs:
-                paths.append(file)
+            p, f = find_snirf_in_folder(entry_path)
+            for path in p:
+                paths.append(path)
             continue
 
         if is_snirf_file(entry_path): #is this a snirf file?
@@ -65,3 +74,20 @@ def find_snirf_in_folder(folder_path):
         snirfs.append(read_snirf(path))
         
     return paths, snirfs
+
+import os
+
+def write_snirfs(paths, snirfs, append_to_path):
+    assert(len(paths) == len(snirfs))
+
+    logging.info(f"Writing {len(snirfs)} .sNIRF files")
+    for path, snirf in zip(paths, snirfs):
+
+        dir, filename = os.path.split(path)
+        name, ext = os.path.splitext(filename)
+
+        # Construct new filename
+        new_filename = f"{name}_{append_to_path}.snirf"
+        new_path = os.path.join(dir, new_filename)
+
+        write_snirf(snirf, new_path)

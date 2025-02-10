@@ -1,0 +1,2 @@
+2025-02-10 10:22:41,906 - INFO - testing info
+2025-02-10 10:22:41,906 - DEBUG - warning debug

@@ -1,0 +1,3 @@
+2025-02-10 10:26:42,012 - INFO - testing info
+2025-02-10 10:26:42,012 - DEBUG - warning debug
+2025-02-10 10:26:42,015 - DEBUG - Creating converter from 3 to 5

@@ -1,0 +1,6 @@
+2025-02-10 10:29:02,121 - INFO - testing info
+2025-02-10 10:29:02,121 - DEBUG - warning debug
+2025-02-10 10:29:02,124 - DEBUG - Creating converter from 3 to 5
+2025-02-10 10:29:04,070 - INFO - Writing 1 .sNIRF files
+2025-02-10 10:29:04,073 - DEBUG - Creating converter from 5 to 3
+2025-02-10 10:29:04,184 - INFO - Wrote .sNIRF : test_save_
