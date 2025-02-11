@@ -6,7 +6,7 @@ def visualize_snirf(snirf):
 
     pass
 
-def plot_snirf(snirf:RawSNIRF):
+def plot_snirf(snirf:RawSNIRF, show=True):
     """
     Display fNIRS channels
     Args:
@@ -16,19 +16,25 @@ def plot_snirf(snirf:RawSNIRF):
     fig, axs = plt.subplots(1, 2)
     channels = np.array(snirf.get_data())
     
-    
+    axs[0].set_title("HbO")
+    axs[1].set_title("HbR")
+    axs[0].set_ylabel("Concentration")
+    axs[1].set_ylabel("Concentration")
+    axs[0].set_xlabel("Time")
+    axs[1].set_xlabel("Time")
     hbo = channels[0:int(len(channels)/2),:]
     hbr = channels[int(len(channels)/2):len(channels),:]
     for ch in hbo:
         axs[0].plot(ch)
     for ch in hbr:
         axs[1].plot(ch)
-        
-    plt.show()
+    
+    if show:
+        plt.show()
     return
 
 
-def plot_psd_snirf(snirf:RawSNIRF):
+def plot_psd_snirf(snirf:RawSNIRF, show=True):
     """
     Display Power Spectral Density of all channels
     Args:
@@ -38,6 +44,13 @@ def plot_psd_snirf(snirf:RawSNIRF):
     channels = np.array(snirf.get_data())
     fs = snirf.info["sfreq"]
     
+    axs[0].set_title("HbO")
+    axs[1].set_title("HbR")
+    axs[0].set_ylabel("Magnitude")
+    axs[1].set_ylabel("Magnitude")
+    axs[0].set_xlabel("Frequency (Hz)")
+    axs[1].set_xlabel("Frequency (Hz)")
+
     hbo = channels[0:int(len(channels)/2),:]
     hbr = channels[int(len(channels)/2):len(channels),:]
     for ch in hbo:
@@ -46,8 +59,9 @@ def plot_psd_snirf(snirf:RawSNIRF):
     for ch in hbr:
         freqs, spectra = compute_psd(ch, fs, int(fs/2))
         axs[1].plot(freqs, spectra )
-        
-    plt.show()
+
+    if show:
+        plt.show()
     return
     
     

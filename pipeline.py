@@ -4,14 +4,17 @@ from visualization.fnirs import plot_snirf, plot_psd_snirf
 
 paths, snirfs = find_snirf_in_folder("data/OMID-13-12-024")
 
-preprocessed = [preprocess_snirf(f) for f in snirfs]
-preprocessed_sr = [preprocess_snirf(f, spike_removal=True) for f in snirfs]
+preprocessed = [preprocess_snirf(f,) for f in snirfs]
+preprocessed_sr = [preprocess_snirf(f, tddr=True, ) for f in snirfs]
 
-plot_snirf(preprocessed[0])
-plot_psd_snirf(preprocessed[0])
+plot_snirf(preprocessed[0], False)
+plot_psd_snirf(preprocessed[0], False)
 
-plot_snirf(preprocessed_sr[0])
-plot_psd_snirf(preprocessed_sr[0])
+plot_snirf(preprocessed_sr[0], False)
+plot_psd_snirf(preprocessed_sr[0], False)
+
+import matplotlib.pyplot as plt
+plt.show()
 exit()
 
 [plot_snirf(f) for f in preprocessed]
