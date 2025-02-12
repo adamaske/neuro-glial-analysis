@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from preprocessing.fnirs.conversion import light_intensity_to_hemoglobin_concentration
 from mne.io import read_raw_snirf
 from preprocessing.fnirs.filtering import butter_bandpass_filter
-from analysis.fnirs.frequencies import compute_fft, compute_psd, plot_sos_frequency_response
+from analysis.frequencies import compute_fft, compute_psd, plot_sos_frequency_response
 from mne_nirs.io.snirf import write_raw_snirf
 # Omid
 omid_roi_channels_right = ["S14_D12", "S7_D6", "S14_D6", "S7_D15", "S10_D6", "S14_D15", "S10_D12"]

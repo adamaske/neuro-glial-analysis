@@ -1,2 +1,0 @@
-2025-02-10 10:30:09,107 - INFO - testing info
-2025-02-10 10:30:09,108 - DEBUG - warning debug

@@ -1,10 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from mne.io.snirf._snirf import RawSNIRF
-from analysis.fnirs.frequencies import compute_psd
-def visualize_snirf(snirf):
-
-    pass
+from analysis.frequencies import compute_psd
 
 def plot_snirf(snirf:RawSNIRF, show=True):
     """

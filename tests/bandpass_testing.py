@@ -1,7 +1,7 @@
 
 
 from preprocessing.fnirs.filtering import butter_bandpass, butter_bandpass_filter
-from analysis.fnirs.frequencies import compute_fft, compute_psd, plot_sos_frequency_response
+from analysis.frequencies import compute_fft, compute_psd, plot_sos_frequency_response
 import matplotlib.pyplot as plt 
 fs = 100
 filter_order = 15

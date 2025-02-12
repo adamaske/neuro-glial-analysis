@@ -7,3 +7,4 @@ snirf
 nilearn
 pylsl
 scipy
+h5py

@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from preprocessing.fnirs.conversion import light_intensity_to_hemoglobin_concentration, light_intensity_to_optical_density, optical_density_to_hemoglobin_concentration
 from mne.io import read_raw_snirf
 from preprocessing.fnirs.filtering import butter_bandpass_filter
-from analysis.fnirs.frequencies import compute_fft, compute_psd, plot_sos_frequency_response
+from analysis.frequencies import compute_fft, compute_psd, plot_sos_frequency_response
 from mne_nirs.io.snirf import write_raw_snirf
 from sklearn.decomposition import PCA, FastICA
 import mne

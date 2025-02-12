@@ -3,7 +3,6 @@ import os
 import snirf
 
 from mne.io import read_raw_snirf
-from preprocessing.fnirs.validation import validate_snirf
 from mne.io.snirf._snirf import RawSNIRF
 from mne_nirs.io import write_raw_snirf
 
@@ -54,6 +53,7 @@ def find_snirf_in_folder(folder_path):
         folder_path (str) : Path to directory.
     Returns:
         paths (array:str) : All filepaths
+        
         snirfs (array:RawSNIRF) : Loaded snirf objects
     """
     paths = []
