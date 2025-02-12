@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from preprocessing.filter import butter_bandpass_filter, notch_filter
 from analysis.frequencies import compute_psd, compute_fft
-from sklearn.decomposition import PCA
+from sklearn.decomposition import PCA, FastICA
 from scipy.integrate import simpson
 
 def remove_movement_artifacts(data, n_components=5):
@@ -39,8 +39,19 @@ def preprocess(data, s_freq):
         filtered_time_series = butter_bandpass_filter(data[idx], 3, 100, s_freq, 5)
         notched = notch_filter(filtered_time_series, s_freq, freqs=[50, 60, 100])
         filtered[idx] = notched
-        
+
+    n = 5
+    #pca = PCA(n_components=n)
+    #ica = FastICA(n_components=n)
+    #transformed_pca = pca.fit_transform(filtered.transpose())  # Transpose so PCA works on timepoints
+    #transformed_ica = ica.fit_transform(filtered.transpose())  # Transpose so PCA works on timepoints
+    #transformed_pca[:, :n] = 0  
+    #transformed_ica[:, :2] = 0  
+    #cleaned_pca = pca.inverse_transform(transformed_pca).transpose()  # Transpose back
+    #cleaned_ica = ica.inverse_transform(transformed_ica).transpose()  # Transpose back
+
     averaged = common_average_reference_filter(filtered)
+        
     return averaged
 
 band_ranges_spec = {
