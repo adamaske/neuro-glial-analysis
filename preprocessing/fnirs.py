@@ -306,7 +306,7 @@ def preprocess_snirf(snirf, od=True, hb=True, filter=True, cv=False, tddr=False,
 
     # Spike Removal -> PCA 
     if spike_removal:
-        current = spike_removal_snirf(current, n_components=3)
+        current = spike_removal_snirf(current, n_components=51)
 
     # TDDR
     if tddr:

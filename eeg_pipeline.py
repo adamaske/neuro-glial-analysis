@@ -6,18 +6,20 @@ from analysis.eeg import epochs, event_related_potentials
 hdf = read_hdf5("data/Adam_RestingState.hdf5")
 samples, sampling_frequency, channel_num, features_onset, features_order, features_desc = parse_hdf5(hdf)
 
+trimmed = trim(samples, sampling_frequency, cut_from_start=3, cut_from_end=3)                                       # NOTE : How does this trimming affect feature timings ? 
 
-trimmed = trim(samples, sampling_frequency, cut_from_start=3, cut_from_end=3)
-# NOTE : How does this trimming affect feature timings ? 
-# We may need to onset -3 second for each feature
-# trim offsets ? 
-  
 preprocessed = preprocess(trimmed, sampling_frequency)
-#Problems :
-# Normalization : Z-Normalization or Baseline correction ? 
 
-epochs(preprocessed, sampling_frequency, -2, 10, features_onset, features_order, features_desc)
+epochs(preprocessed, sampling_frequency, -2, 5, features_onset, features_order, features_desc)
 
+event_related_potentials(preprocessed, sampling_frequency, P=[50, 150, 250], N=[100, 200, 300], 
+                         onsets=features_onset, order=features_order, desc=features_desc)
+
+inspect_channels(preprocessed, sampling_frequency)
+inspect_channel_by_channel(preprocessed, sampling_frequency)
+
+#write_hdf5_replace_data_keep_stats(preprocessed, hdf, "data/Adam_RestingState_Preprocessed.hdf5")
+    
 # TODO : Preprocessing
 # Channel selection : Remove non ROI channels
 # Channel rejection : What algorithm?
@@ -32,17 +34,5 @@ epochs(preprocessed, sampling_frequency, -2, 10, features_onset, features_order,
 # Threshold hemodynamic response function, eeg erp amplitude -> pearson correlation
 # Granger connectivity of EEG and fNIRS ROIs
 # ROI comparison
-
-inspect_channels(preprocessed, sampling_frequency)
-inspect_channel_by_channel(preprocessed, sampling_frequency)
-
-inspect_channels(preprocessed, sampling_frequency)
-inspect_channel_by_channel(preprocessed, sampling_frequency)
-
-write_hdf5_replace_data_keep_stats(preprocessed, hdf, "data/Adam_RestingState_Preprocessed.hdf5")
-
-
-
-    
 
 
