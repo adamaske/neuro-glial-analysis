@@ -126,7 +126,12 @@ def parse_hdf5(hdf:h5py.File):
     print("first_name : ", first_name)
     print("last_name : ", last_name)
     
-    return samples, sampling_frequency, channel_num, 
+    #Features / Markers
+    features_onset = [13.4, 25.4, 34.5, 45.3]
+    features_order = [0, 1, 0, 2,]
+    features_duration = [ 15, 10, 10]
+    features_desc = [ "Rest", "Left", "Right"]
+    return samples, sampling_frequency, channel_num, features_onset, features_order, features_desc
 
 def write_hdf5_replace_data_keep_stats(data, orig_hdf:h5py.File, filepath:str):
     

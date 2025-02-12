@@ -32,14 +32,25 @@ def common_average_reference_filter(data):
     averaged = data - average_reference
     return averaged
 
-def preprocess(data, s_freq): 
-    filtered = np.zeros((data.shape))
+def normalize(data, znorm=False, baseline_correction=False, log=False):
+    normalized = data
+    # Z-Normalization
+    if znorm:
+        normalized = (data - np.mean(data, axis=1, keepdims=True)) / np.std(data, axis=1, keepdims=True)
     
-    for idx in range(len(data)):
-        filtered_time_series = butter_bandpass_filter(data[idx], 3, 100, s_freq, 5)
-        notched = notch_filter(filtered_time_series, s_freq, freqs=[50, 60, 100])
-        filtered[idx] = notched
+    # Baseline Correction
+    if baseline_correction:
+        baseline = data[:, :2560]  # Assume first 50 samples are pre-stimulus
+        baseline_mean = np.mean(baseline, axis=1, keepdims=True)
+        normalized = data - baseline_mean
+    # Log Transformation
+    if log:
+        normalized = np.log1p(np.abs(data))
+        
+    return normalized
 
+def motion_correction(data):
+    motion_corrected = data
     n = 5
     #pca = PCA(n_components=n)
     #ica = FastICA(n_components=n)
@@ -49,10 +60,24 @@ def preprocess(data, s_freq):
     #transformed_ica[:, :2] = 0  
     #cleaned_pca = pca.inverse_transform(transformed_pca).transpose()  # Transpose back
     #cleaned_ica = ica.inverse_transform(transformed_ica).transpose()  # Transpose back
+    return motion_corrected
+    
 
-    averaged = common_average_reference_filter(filtered)
-        
-    return averaged
+def preprocess(data, s_freq): 
+    filtered = np.zeros((data.shape))
+    
+    for idx in range(len(data)):
+        filtered_time_series = butter_bandpass_filter(data[idx], 3, 100, s_freq, 5)
+        notched = notch_filter(filtered_time_series, s_freq, freqs=[50, 60, 100])
+        filtered[idx] = notched
+
+    motion_corrected = motion_correction(filtered) 
+
+    averaged = common_average_reference_filter(motion_corrected)
+    
+    normalized = normalize(averaged, znorm=True)
+
+    return normalized
 
 band_ranges_spec = {
         "Delta (0.5-4 Hz)": (0.5, 4),
