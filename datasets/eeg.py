@@ -1,5 +1,6 @@
 import h5py
 import os
+import shutil
 import pathlib
 import numpy as np
 import xml.etree.ElementTree as et
@@ -86,6 +87,7 @@ def parse_hdf5(hdf:h5py.File):
     rawdata_group = hdf["RawData"] # this is a group
 
     #   'Samples' NOTE : This is the actual channel data
+    print(rawdata_group["Samples"])
     samples = np.array(rawdata_group["Samples"]).transpose()
     print("samples : ", samples.shape)
 
@@ -133,11 +135,28 @@ def parse_hdf5(hdf:h5py.File):
     features_desc = [ "Rest", "Left", "Right"]
     return samples, sampling_frequency, channel_num, features_onset, features_order, features_desc
 
-def write_hdf5_replace_data_keep_stats(data, orig_hdf:h5py.File, filepath:str):
+def write_hdf5_replace_data_keep_stats(data, original_hdf:h5py.File):
     
-    # TODO : 
+    # First Create a copy of the orignial file with a temporary name, then move that file into the new filepath
+    old_filepath = original_hdf.filename #
+    filename, suffix = old_filepath.split(".")
+    temp_filepath = filename + "_copy." + suffix
+    new_filepath = filename + "_PROCESSED." + suffix
+    original_hdf.close()
+    shutil.copy(old_filepath, temp_filepath)
+    os.rename(temp_filepath, new_filepath)
     
+    print(f"Write HDF5 : {old_filepath} copied and renamed to {new_filepath}")
     
+    # Load the newly created file, and replace the data 
+    hdf = h5py.File(new_filepath, mode="r+")
+    print("Write HDF5 : Loaded {hdf} in read+ mode.")
+
+    rawdata_group = hdf["RawData"]
+    del rawdata_group["Samples"]
+    rawdata_group.create_dataset("Samples", data=data.T, dtype="f4")
+    
+    hdf.close()
     return
     
     

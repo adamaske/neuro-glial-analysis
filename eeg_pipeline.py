@@ -10,6 +10,12 @@ trimmed = trim(samples, sampling_frequency, cut_from_start=3, cut_from_end=3)   
 
 preprocessed = preprocess(trimmed, sampling_frequency)
 
+
+
+trimmed = trim(samples, sampling_frequency, cut_from_start=3, cut_from_end=3)                                       # NOTE : How does this trimming affect feature timings ? 
+
+preprocessed = preprocess(trimmed, sampling_frequency)
+
 epochs(preprocessed, sampling_frequency, -2, 5, features_onset, features_order, features_desc)
 
 event_related_potentials(preprocessed, sampling_frequency, P=[50, 150, 250], N=[100, 200, 300], 
@@ -18,8 +24,14 @@ event_related_potentials(preprocessed, sampling_frequency, P=[50, 150, 250], N=[
 inspect_channels(preprocessed, sampling_frequency)
 inspect_channel_by_channel(preprocessed, sampling_frequency)
 
-#write_hdf5_replace_data_keep_stats(preprocessed, hdf, "data/Adam_RestingState_Preprocessed.hdf5")
-    
+write_hdf5_replace_data_keep_stats(data=preprocessed, original_hdf=hdf)
+
+new_hdf = read_hdf5("data/Adam_RestingState_PROCESSED.hdf5")
+samples, sampling_frequency, channel_num, features_onset, features_order, features_desc = parse_hdf5(new_hdf)
+
+inspect_channels(samples, sampling_frequency)
+inspect_channel_by_channel(samples, sampling_frequency)
+exit()    
 # TODO : Preprocessing
 # Channel selection : Remove non ROI channels
 # Channel rejection : What algorithm?
