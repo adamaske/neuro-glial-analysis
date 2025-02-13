@@ -1,11 +1,8 @@
 import pathlib
 import os 
-import snirf
-
 from mne.io import read_raw_snirf
 from mne.io.snirf._snirf import RawSNIRF
 from mne_nirs.io import write_raw_snirf
-
 import logging
 
 dir_path = os.path.dirname(os.path.realpath(__file__)) #path of this file
@@ -40,11 +37,6 @@ def read_snirf(filepath:str) -> "RawSNIRF":
     
     return snirf
 
-def write_snirf(snirf:RawSNIRF, filepath:str) -> str:
-    write_raw_snirf(snirf, filepath)
-    logging.info(f"Wrote .sNIRF : {filepath}")
-
-
 
 def find_snirf_in_folder(folder_path):
     """
@@ -75,8 +67,10 @@ def find_snirf_in_folder(folder_path):
         
     return paths, snirfs
 
-import os
-
+def write_snirf(snirf:RawSNIRF, filepath:str) -> str:
+    write_raw_snirf(snirf, filepath)
+    logging.info(f"Wrote .sNIRF : {filepath}")
+    
 def write_snirfs(paths, snirfs, append_to_path):
     assert(len(paths) == len(snirfs))
 
@@ -91,3 +85,33 @@ def write_snirfs(paths, snirfs, append_to_path):
         new_path = os.path.join(dir, new_filename)
 
         write_snirf(snirf, new_path)
+        
+def snirf_channel_names_to_indices(snirf:RawSNIRF):
+    indicies = []
+    
+    return indicies
+
+def get_roi_by_indicies(snirf:RawSNIRF, indicies):
+    """
+    Extract the ROI channels from snirf file. 
+    Returns the channels, and channel names where channels[i] = channel_names[i]
+    Args:
+        snirf(RawSNIRF): snirf object
+        indices(array:int): list of channel indices in roi
+    Returns:
+        channels(np.array) : each channel
+        channel_names(array:str) : List of channel names where channels[i] = channel_names[i]
+    """
+    data = snirf.get_data()
+    ch_names = snirf.info["ch_names"]
+    
+    roi_channels = []
+    roi_channel_names = []
+    for i in indicies:
+        roi_channels.append(data[i])
+        roi_channel_names.append(ch_names[i])
+        
+    return roi_channels, roi_channel_names
+
+    
+    
