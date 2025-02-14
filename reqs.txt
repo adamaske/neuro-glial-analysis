@@ -8,3 +8,4 @@ nilearn
 pylsl
 scipy
 h5py
+pywavelets

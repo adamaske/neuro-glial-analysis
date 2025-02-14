@@ -67,7 +67,7 @@ def preprocess(data, s_freq):
     filtered = np.zeros((data.shape))
     
     for idx in range(len(data)):
-        filtered_time_series = butter_bandpass_filter(data[idx], 3, 100, s_freq, 5)
+        filtered_time_series = butter_bandpass_filter(data[idx], 1, 100, s_freq, 5)
         notched = notch_filter(filtered_time_series, s_freq, freqs=[50, 60, 100])
         filtered[idx] = notched
 

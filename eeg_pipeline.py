@@ -1,14 +1,21 @@
 from datasets.eeg import read_hdf5, find_hdf5_in_folder, parse_hdf5, write_hdf5_replace_data_keep_stats
 from preprocessing.eeg import trim, preprocess
 from visualization.eeg import inspect_channels, inspect_channel_by_channel
-from analysis.eeg import epochs, event_related_potentials
+from analysis.eeg import epochs, event_related_potentials, short_time_fourier_transform, multi_channel_stft, continuous_wavelet_transform, multi_channel_cwt
 
 hdf = read_hdf5("data/Adam_RestingState.hdf5")
 samples, sampling_frequency, channel_num, features_onset, features_order, features_desc = parse_hdf5(hdf)
 
+
+
 trimmed = trim(samples, sampling_frequency, cut_from_start=3, cut_from_end=3)                                       # NOTE : How does this trimming affect feature timings ? 
 preprocessed = preprocess(trimmed, sampling_frequency)
 
+#continuous_wavelet_transform(preprocessed[0], sampling_frequency)
+
+short_time_fourier_transform(preprocessed[0], sampling_frequency)
+
+exit()
 epochs, order = epochs(preprocessed, sampling_frequency, -2, 5, features_onset, features_order, features_desc)
 
 event_related_potentials(preprocessed, sampling_frequency, P=[50, 150, 250], N=[100, 200, 300], 
