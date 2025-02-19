@@ -1,5 +1,7 @@
 import h5py
 import os
+import shutil
+import pathlib
 import numpy as np
 import xml.etree.ElementTree as et
 
@@ -15,132 +17,140 @@ def parse_xml(xml_str):
         parsed_data[child.tag] = child.text.strip() if child.text else None
     return parsed_data
 
-# This is a wrapper for hdf5 eeg file from g.Recorder
-class EEG_: 
-    def __init__(self):
+class EEG:
+    def __init__(self, filepath:str=""):
+        if filepath != "":
+            self.read(filepath)
+        
         pass
     
-    def parse_hdf(self, hdf):
-        print(hdf.keys())
-        # 'AsynchronData' : This contains markers
-        async_data_group = hdf["AsynchronData"] 
-        print(async_data_group["AsynchronSignalTypes"])
-        root = et.fromstring(async_data_group["AsynchronSignalTypes"].asstr()[0])
-
-        signals = []
-        for signal in root.findall('AsynchronSignalDescription'):
-            signal_data = {
-                'IsCombinedSignal': signal.find('IsCombinedSignal').text,
-                'Name': signal.find('Name').text,
-                'IsToggleSignal': signal.find('IsToggleSignal').text,
-                'IsTrigger': signal.find('IsTrigger').text,
-                'IsEnabled': signal.find('IsEnabled').text,
-                'ID': signal.find('ID').text,
-                'Edge': signal.find('Edge').text,
-                'Description': signal.find('Description').text,
-                'Direction': signal.find('Direction').text,
-                'Color': signal.find('Color').text,
-                'ChannelNumber': signal.find('ChannelNumber').text,
-                'DeviceSerial': signal.find('SourceDevice/DeviceSerial').text,
-                'SourceType': signal.find('SourceDevice/SourceType').text,
-            }
-            print("\n")
-            print(signal_data)
-
-        onsets = np.array(async_data_group["Time"]).T
-        descs = np.array(async_data_group["TypeID"]).T
-        values = np.array(async_data_group["Value"]).T
-
+    def print_features(self):
+        assert(len(self.onsets) == len(self.descs)) # 
+        for idx, onset in enumerate(self.onsets):
+            print(f"Feature {idx} @ {self.onsets[idx]}:{self.descs[idx]}")
         
-        print("onsets : ", onsets)
-        print("descs : ", descs)
-        print("values : ", values)
-        return
-
-        # 'SavedFeatures' # NOTE : TODO this needs to be implemetned further 
-        saved_features_group = hdf["SavedFeatues"]
-        features_num = saved_features_group["NumberOfFeatures"].astype('int32')[0]
-        print("features_num : ", features_num)
-
-        # 'Version'
-        version_group = hdf["Version"]
-        version_keys = version_group.keys()
-        version = version_group["Version"].asstr()[0]
-        print("version : ", version)
-
-        # Handle 'RawData'
-        rawdata_group = hdf["RawData"] # this is a group
-
-        #   'Samples' NOTE : This is the actual channel data
-        print(rawdata_group["Samples"])
-        samples = np.array(rawdata_group["Samples"]).transpose()
-        print("samples : ", samples.shape)
-
-        #   'AcquisitionTaskDescription' 
+    def print(self):
+        print("EEG : ", self.filepath)
+        print("sampling_frequency : ", self.sampling_frequency)  
+        print("channel_num : ", self.channel_num )
+        print("channel_data : ", self.channel_data.shape)
+        print("feature_onsets : ", self.feature_onsets)
+        print("feature_descriptions : ", self.feature_descriptions) 
+        print("session_run :", self.session_run)
+        print("session_comment :", self.session_comment)
+        print("acquisition_device : ", self.acquisition_device)
+        print("acquisition_unit : ", self.acquisition_unit)
+        
+    def read(self, filepath):
+        print("Reading HDF5 file : ", filepath)
+        
+        self.filepath = filepath
+        self.hdf = h5py.File(filepath, mode="r+")
+        
+        # Handle 'RawData' containing the acutal channeld ata
+        rawdata_group = self.hdf["RawData"]
+        self.channel_data = np.array(rawdata_group["Samples"]).transpose()
+        print("Samples : ", self.channel_data.shape)
+        
+        # 'AsynchronData' : This contains Features / Markers
+        async_data_group = self.hdf ["AsynchronData"] 
+        self.feature_onsets = np.array(async_data_group["Time"]).T[0]
+        self.feature_descriptions = np.array(async_data_group["TypeID"]).T[0]
+        print("feature_onsets : ", self.feature_onsets)
+        print("feature_descriptions : ", self.feature_descriptions) 
+        
+        # 'AcquisitionTaskDescription' 
         acquisition_task_desc = parse_xml(rawdata_group["AcquisitionTaskDescription"].asstr()[0])
         channel_properties = acquisition_task_desc.get("ChannelProperties")
-        channel_num = int(acquisition_task_desc.get("NumberOfAcquiredChannels"))
-        sampling_frequency = float(acquisition_task_desc.get("SamplingFrequency"))
+        self.channel_num = int(acquisition_task_desc.get("NumberOfAcquiredChannels"))
+        self.sampling_frequency = float(acquisition_task_desc.get("SamplingFrequency"))
         print("channel_properties : ", channel_properties)
-        print("channel_num : ", channel_num)
-        print("sampling_frequency : ", sampling_frequency)
-
-        #   'DAQDeviceCapabilities' # NOTE : No important information here as far as I can tell
-        daw_capabilities = parse_xml(rawdata_group["DAQDeviceCapabilities"].asstr()[0])
-
+        print("channel_num : ", self.channel_num )
+        print("sampling_frequency : ", self.sampling_frequency)  
+        
         #   'DAQDeviceDescription
         daq_desc = parse_xml(rawdata_group["DAQDeviceDescription"].asstr()[0])
-        acquisition_unit = daq_desc.get("Unit") # micro Volts
-        acquisition_device = daq_desc.get("Name")
-        print("acquisition_unit : ", acquisition_unit)
-        print("acquisition_device : ", acquisition_device)
-
+        self.acquisition_unit = daq_desc.get("Unit") # micro Volts
+        self.acquisition_device = daq_desc.get("Name")
+        print("acquisition_unit : ", self.acquisition_unit)
+        print("acquisition_device : ", self.acquisition_device)
+        
         #   'SessionDescription'
         session_desc = parse_xml(rawdata_group["SessionDescription"].asstr()[0])
-        session_run = session_desc.get("Run")
-        session_comment = session_desc.get("Comment")
-        print("session_run :", session_run)
-        print("session_comment :", session_comment)
-
+        print(session_desc)
+        self.session_run = session_desc.get("Run")
+        self.session_comment = session_desc.get("Comment")
+        print("session_run :", self.session_run)
+        print("session_comment :", self.session_comment)
+        
         #   'SubjectDescription'
         subject_desc = parse_xml(rawdata_group["SubjectDescription"].asstr()[0])
         comment = format_comment(subject_desc.get("Comment"))
-        birthday = subject_desc.get("DayOfBirth")
         first_name = subject_desc.get("FirstName")
         last_name = subject_desc.get("LastName")
         print("comment : ", comment)
-        print("birthday : ", birthday)
-        print("first_name : ", first_name)
-        print("last_name : ", last_name)
+        print("name : ", first_name, " ", last_name)
+        
+        self.hdf.close()
+        # 'SavedFeatures' # NOTE : This is not important
+        #saved_features_group = self.hdf["SavedFeatues"]
+        #saved_features_keys = saved_features_group.keys()
+        #features_num = saved_features_group["NumberOfFeatures"].astype('int32')[0]
+        #print("features_num : ", features_num)
 
-        #Features / Markers
-        features_onset = [13.4, 25.4, 34.5, 45.3]
-        features_order = [0, 1, 0, 2,]
-        features_duration = [ 15, 10, 10]
-        features_desc = [ "Rest", "Left", "Right"]
-        return samples, sampling_frequency, channel_num, features_onset, features_order, features_desc
+        # 'Version' # NOTE : This is not important
+        #version_group = self.hdf["Version"]
+        #version_keys = version_group.keys()
+        #version = version_group["Version"].asstr()[0]
+        #print("version : ", version)
 
-    def open(self, filepath:str):
-
-        hdf = h5py.File(filepath, mode="r")
-
-        self.parse_hdf(hdf)
-
-        return 
+        #   'DAQDeviceCapabilities' # NOTE : No important information here as far as I can tell
+        #daw_capabilities = parse_xml(rawdata_group["DAQDeviceCapabilities"].asstr()[0])
+        
+        return self
     
-    def write(self, filepath:str):
+    def write(self, new_filepath:str) -> "EEG":
+        
+        old_filepath = self.filepath #  What file to copy
+        
+        filename, suffix = old_filepath.split(".") 
+        temp_filepath = filename + "_temporary." + suffix # Where to create a copy
+        
+        shutil.copy(old_filepath, temp_filepath) # Copy file
+        print(f"Write HDF5 : {old_filepath} copied, new filepath : {new_filepath}")
 
-        #prompt do you want to overwrite it?
+        # Loads the temporary file, alters it
+        hdf = h5py.File(temp_filepath, mode="r+")
+        print("Write HDF5 : Loaded {hdf} in read+ mode.")
 
+        #Replace features
+        async_group = hdf["AsynchronData"]
+        del async_group["Time"]
+        del async_group["TypeID"] 
+        async_group.create_dataset("Time", data=np.array(self.feature_onsets).reshape(-1, 1))
+        async_group.create_dataset("TypeID", data=np.array(self.feature_descriptions).reshape(-1, 1))
+        
+        # Overwrite channel data
+        rawdata_group = hdf["RawData"]
+        del rawdata_group["Samples"]
+        rawdata_group.create_dataset("Samples", data=self.channel_data.T, dtype="f4")
+        
+        hdf.close()
+       
+        # Then relocates and renames the file
+        if os.path.exists(new_filepath):
+            ans = input(f"{new_filepath} already exists. Do you want to overwrite it? [Y / N] : ")
+            if ans.capitalize() == "Y":
+                shutil.move(temp_filepath, new_filepath)
+                print(f"Wrote HDF5 to {new_filepath}")
+            else:
+                print("Write canceled....")
+                os.remove(temp_filepath)
+                return
+        else:
+            os.rename(temp_filepath, new_filepath) # Change file name & path
+            print(f"Wrote HDF5 to {new_filepath}")
 
-        return
-
-    def close(self, filepath:str):
-
-
-        return
+        return EEG(new_filepath)
     
-if __name__ == "__main__":
-
-    eeg = EEG_()
-    eeg.open("data/FeaturesTesting.hdf5")
+    

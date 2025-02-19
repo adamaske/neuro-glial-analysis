@@ -4,6 +4,7 @@ from preprocessing.filter import butter_bandpass_filter, notch_filter
 from analysis.frequencies import compute_psd, compute_fft
 from sklearn.decomposition import PCA, FastICA
 from scipy.integrate import simpson
+from wrappers.eeg import EEG
 
 def remove_movement_artifacts(data, n_components=5):
     pca = PCA(n_components=n_components)
@@ -11,14 +12,20 @@ def remove_movement_artifacts(data, n_components=5):
     transformed[:, :n_components] = 0  # Remove first few components
     return pca.inverse_transform(transformed).T
 
-def trim(data, s_freq, cut_from_start, cut_from_end):
-    sample_num = len(data[0])
+def trim(eeg:EEG, cut_from_start:float, cut_from_end:float):
+    print(f"Trimming EEG : (-{cut_from_start}, {cut_from_end})")
+    s_freq = eeg.sampling_frequency
+    
+    sample_num = eeg.channel_data.shape[1]
     
     start = int(cut_from_start * s_freq)
     end = sample_num - int(cut_from_end * s_freq)
     
-    cropped = data[:, start:end]
-    return cropped
+    eeg.channel_data = eeg.channel_data[:, start:end]
+    
+    valid_indices = [i for i, onset in enumerate(eeg.feature_onsets) if start <= onset < end]
+    eeg.feature_onsets = np.array([eeg.feature_onsets[i] - start for i in valid_indices])
+    eeg.feature_descriptions = [eeg.feature_descriptions[i] for i in valid_indices]
     
 def bandpass_channels(data, s_freq, lowcut, highcut, order):
     filtered = np.zeros((data.shape))
@@ -63,12 +70,13 @@ def motion_correction(data):
     return motion_corrected
     
 
-def preprocess(data, s_freq): 
+def preprocess(eeg:EEG, bandpass=True, normalization=True,): 
+    data = eeg.channel_data
     filtered = np.zeros((data.shape))
     
     for idx in range(len(data)):
-        filtered_time_series = butter_bandpass_filter(data[idx], 1, 100, s_freq, 5)
-        notched = notch_filter(filtered_time_series, s_freq, freqs=[50, 60, 100])
+        filtered_time_series = butter_bandpass_filter(data[idx], 1, 100, eeg.sampling_frequency, 5)
+        notched = notch_filter(filtered_time_series, eeg.sampling_frequency, freqs=[50, 60, 100])
         filtered[idx] = notched
 
     motion_corrected = motion_correction(filtered) 
@@ -77,6 +85,7 @@ def preprocess(data, s_freq):
     
     normalized = normalize(averaged, znorm=True)
 
+    eeg.channel_data =  normalized
     return normalized
 
 band_ranges_spec = {

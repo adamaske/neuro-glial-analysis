@@ -1,7 +1,17 @@
-from datasets.eeg import read_hdf5, find_hdf5_in_folder, parse_hdf5, write_hdf5_replace_data_keep_stats
+from datasets.eeg import find_eeg_files_in_folder
 from preprocessing.eeg import trim, preprocess
 from visualization.eeg import inspect_channels, inspect_channel_by_channel
 from analysis.eeg import epochs, event_related_potentials, short_time_fourier_transform, multi_channel_stft, continuous_wavelet_transform, multi_channel_cwt
+from wrappers.eeg import EEG
+
+eeg = EEG("data/FeaturesTesting.hdf5")
+eeg.print() # Inspect information retreived from hdf5 file. 
+
+trim(eeg=eeg, cut_from_start=5.56, cut_from_end=0)
+eeg.print()
+#new_eeg = eeg.write("data/FeaturesTesting_PROCESSED.hdf5")
+#new_eeg.print()
+exit()
 
 hdf = read_hdf5("data/Adam_RestingState.hdf5")
 samples, sampling_frequency, channel_num, features_onset, features_order, features_desc = parse_hdf5(hdf)

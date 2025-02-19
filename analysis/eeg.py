@@ -98,7 +98,7 @@ def event_related_potentials(data, s_freq, P, N, onsets, order, desc):
 
 def short_time_fourier_transform(time_series, s_freq):
     
-    freqs, t, m = stft(time_series, s_freq, window='gaussian', nperseg=256, noverlap=128, nfft=)
+    freqs, t, m = stft(time_series, s_freq, window='gaussian', nperseg=256, noverlap=128)
     return 
 
 def multi_channel_stft(data, s_freq):
