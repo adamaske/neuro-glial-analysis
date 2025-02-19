@@ -97,18 +97,8 @@ def event_related_potentials(data, s_freq, P, N, onsets, order, desc):
     pass
 
 def short_time_fourier_transform(time_series, s_freq):
-    N = len(time_series)
-    win = hann(M=100, sym=True)
-    stft = scipy.signal.ShortTimeFFT(win=win, hop=10, fs=s_freq, mfft=200, scale_to="psd")
     
-    Sx = stft.stft(time_series)
-    t_lo, t_hi = stft.extent(N)[:2]  # time range of plot
-
-    fig, axs = plt.subplots(figsize=(6., 4.)) 
-    im1 = axs.imshow(10*abs(Sx), origin='lower', aspect='auto', extent=stft.extent(N), cmap='viridis')
-    #axs.plot(t_x, f_i, 'r--', alpha=.5, label='$f_i(t)$')
-    fig.colorbar(im1, label="Magnitude $|S_x(t, f)|$")
-    plt.show()
+    freqs, t, m = stft(time_series, s_freq, window='gaussian', nperseg=256, noverlap=128, nfft=)
     return 
 
 def multi_channel_stft(data, s_freq):
