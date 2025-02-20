@@ -3,6 +3,7 @@ import os
 from mne.io import read_raw_snirf
 from mne.io.snirf._snirf import RawSNIRF
 from mne_nirs.io import write_raw_snirf
+from snirf import validateSnirf
 import logging
 
 dir_path = os.path.dirname(os.path.realpath(__file__)) #path of this file
@@ -10,6 +11,10 @@ dir_path = os.path.dirname(os.path.realpath(__file__)) #path of this file
 def is_snirf_file(filepath): #Check for snirf file
    return pathlib.Path(filepath).suffix == '.snirf'
 
+def validate_snirf(snirf:RawSNIRF):
+    result = validateSnirf(snirf)
+    result.display()
+    return result.is_valid()
 
 def validate_snirf_files(files):
     

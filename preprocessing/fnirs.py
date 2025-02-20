@@ -14,165 +14,17 @@ from mne.preprocessing.nirs import optical_density, beer_lambert_law,  temporal_
 from mne.io.snirf._snirf import RawSNIRF
 from snirf import validateSnirf
 
-def crop_by_first_and_last_annotation(snirf):
-    
-    """
-    Crop a snirf file to start when the first annoation begins and ends at the end of the last annotation. 
-    Returns a cropped copy of the SnirfRAW object. 
-    Args:
-        snirf (mne.SnirfRAW) : 
-    Returns:
-        cropped (mne.SnirfRAW) : Cropped snrif object. 
-    """
-    
-    start = snirf.annotations[0]["onset"]
-    last = snirf.annotations[len(snirf.annotations)-1]
-    end = last["onset"] + last["duration"]
-    cropped = snirf.copy()
-    cropped = cropped.crop(tmin=start, tmax=end)
-    return cropped
+from wrappers.fnirs import fNIRS
 
-def validate_snirf(snirf:RawSNIRF|str) -> bool:
-    """
-    Validate a snirf file. 
-    Wrapper for pysnirf2.validateSnirf. 
-    If snirf object sent, a temporary 
+def wl_to_od(snirf:RawSNIRF):
+    return optical_density(snirf)
 
-    Args:
-        snirf (mne.raw or str) : Either snirfFilepath to ".snirf" file.
-    Returns:
-        valid (bool) : True for valid snirf. 
-    """
-    result = validateSnirf(snirf)
-    result.display()
-    return result.is_valid()
-    
-    if isinstance(snirf, str): #
-        result = validateSnirf(snirf)
-        result.display()
-        return result.is_valid()
-    
-    temp_filepath = "temp/temporary.snirf" 
-    write_raw_snirf(snirf, temp_filepath)
-    print("Validation : Created temporary file : ", temp_filepath)
-    
-    result = validateSnirf(temp_filepath)
-    result.display()
+def od_to_hb(snirf:RawSNIRF):
+    return beer_lambert_law(snirf)
 
-    try:
-        remove(temp_filepath)
-        print("Validation : Deleted temporary file ", temp_filepath)
-    except FileNotFoundError:
-        print("Validation : Cannot delete temporary (FileNotFound) : ", temp_filepath)
-    except PermissionError:
-        print("Validation : Cannot delete temporary (PermissionError) : ", temp_filepath)
-    except Exception as e:
-        print("Validation : Error occured : ", temp_filepath)
-
-    return result.is_valid()
-
-
-def light_intensity_to_optical_density(snirf) -> "RawSNIRF":
-    """
-    Convert raw light intensity data to optical density. Handles both mne raw snirf objects and filepath to snirf file.
-
-    Args:
-        snirf (mne.raw or str) : Either mne.raw snirf object or filepath to snirf file. 
-
-    Returns:
-        od (mne.raw or str) : Either mne.raw snirf object or filepath to new snirf file.
-    """
-    if isinstance(snirf, str): #handle as a filepath
-        directory, filename = split(snirf)
-        name, extension = splitext(filename)
-
-        new_filename = f"{name}_optical_density{extension}"
-        new_path = join(directory, new_filename)
-
-        light_intensity = read_raw_snirf(snirf)
-        #is_valid = validate_snirf(light_intensity)
-        #if not is_valid:
-        #    print("Invalid snirf object, returning original filepath : light_intensity_to_optical_density, ", __file__)
-        #    return snirf
-        
-        od = optical_density(light_intensity)
-        #od_valid = validate_snirf(od_valid)
-        #if not od_valid:
-        #    print("An error occured in optical density conversion, returning original filepath : light_intensity_to_optical_density, ", __file__)
-        #    return snirf
-        
-        write_raw_snirf(od, new_path)
-        print(f"Optical density conversion succeeded, new filepath : {new_path}")
-        return new_path
-        
-    #is_valid = validate_snirf(snirf)
-    #if not is_valid:
-    #    print("Invalid snirf object, returning original snirf object : light_intensity_to_optical_density, ", __file__)
-    #    return snirf
-
-    od = optical_density(snirf)
-    #od_valid = validate_snirf(od)
-    #if not od_valid:
-    #        print("An error occured in optical density conversion, returning original snrif object : light_intensity_to_optical_density, ", __file__)
-    #        return snirf
-    
-    print(f"Optical density conversion succeeded, new snirf object : ")
-    print(od.info)
-    return od
-
-
-def optical_density_to_hemoglobin_concentration(od) -> "RawSNIRF":
-    """
-    Convert optical density data to hemoglobin concentration. Handles both mne raw snirf objects and filepath to snirf file.
-
-    Args:
-        od (mne.raw or str) : Either mne.raw snirf object or filepath to snirf file. 
-
-    Returns:
-        hb (mne.raw or str) : Either mne.raw snirf object or filepath to new snirf file.
-    """
-    if isinstance(od, str): #handle as a filepath
-        directory, filename = split(od)
-        name, extension = splitext(filename)
-
-        new_filename = f"{name}_hemoglobin{extension}"
-        new_path = join(directory, new_filename)
-
-        od = read_raw_snirf(od)
-        #is_valid = validate_snirf(od)
-        #if not is_valid:
-        #    print("Invalid optical density snirf object, returning original filepath : optical_density_to_hemoglobin_concentration, ", __file__)
-        #    return od
-        
-        hb = beer_lambert_law(od)
-        #hb_is_valid = validate_snirf(hb)
-        #if not hb_is_valid:
-        #    print("An error occured in hemoglobin conversion, returning original filepath : optical_density_to_hemoglobin_concentration, ", __file__)
-        #    return od
-        
-        write_raw_snirf(hb, new_path)
-        print(f"Hemoglobin conversion succeeded, new filepath : {new_path}")
-        return new_path
-        
-    #is_valid = validate_snirf(od)
-    #if not is_valid:
-    #    print("Invalid snirf object, returning original snirf object : optical_density_to_hemoglobin_concentration, ", __file__)
-    #    return od
-
-    hb = beer_lambert_law(od)
-    #hb_is_valid = validate_snirf(hb)
-    #if not hb_is_valid:
-    #        print("An error occured in hemoglobin conversion, returning original snrif object : optical_density_to_hemoglobin_concentration, ", __file__)
-    #        return od
-    
-    print(f"Optical density conversion succeeded, new snirf object : ")
-    print(hb.info)
-    return hb
-
-def light_intensity_to_hemoglobin_concentration(snirf):
-     od = light_intensity_to_optical_density(snirf)
-     hb = optical_density_to_hemoglobin_concentration(od)
-     return hb
+def wl_to_hb(snirf:RawSNIRF):
+    od = wl_to_od(snirf)
+    return od_to_hb(od)
  
 def motion_correction(snirf:RawSNIRF) -> "RawSNIRF":
     """
@@ -186,7 +38,7 @@ def motion_correction(snirf:RawSNIRF) -> "RawSNIRF":
     
     """
 
-    corrected = temporal_derivative_distribution_repair(snirf.copy())
+    corrected = temporal_derivative_distribution_repair(snirf)
     return corrected
 
 def channel_rejection(snirf:RawSNIRF, threshold=0.1) -> "RawSNIRF":
@@ -293,7 +145,7 @@ def preprocess_snirf(snirf, od=True, hb=True, filter=True, cv=False, tddr=False,
     
     # Optical density
     if od:
-        current = light_intensity_to_optical_density(current)
+        current = wl_to_od(current)
     
     # Channel rejection  
     if cv:
@@ -322,6 +174,6 @@ def preprocess_snirf(snirf, od=True, hb=True, filter=True, cv=False, tddr=False,
         
     # Hemoglobin
     if hb:
-        current = optical_density_to_hemoglobin_concentration(current)
+        current = od_to_hb(current)
     
     return current

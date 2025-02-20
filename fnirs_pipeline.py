@@ -5,7 +5,7 @@ from analysis.fnirs import epochs_snirf
 
 paths, snirfs = find_snirf_in_folder("data/OMID-13-12-024")
 
-#preprocessed = [preprocess_snirf(f,) for f in snirfs]
+preprocessed = [preprocess_snirf(f,) for f in snirfs]
 epochs, order = [epochs_snirf(f, tmin=-2, tmax=15) for f in snirfs]
 
 #preprocessed_sr = [preprocess_snirf(f, tddr=True, ) for f in snirfs]
