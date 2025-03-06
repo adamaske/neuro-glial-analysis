@@ -71,22 +71,32 @@ def motion_correction(data):
     
 
 def preprocess(eeg:EEG, bandpass=True, normalization=True,): 
-    data = eeg.channel_data
-    filtered = np.zeros((data.shape))
+    # Copy data to modify
+    processed_data = eeg.channel_data.copy()
+    if bandpass: # Apply Bandpass filtering -> 1 to 100 Hz, 50, 60, 100 Hz notch filter
+        for idx in range(len(processed_data)):
+            filtered_time_series = butter_bandpass_filter(processed_data[idx], 1, 100, eeg.sampling_frequency, 5)
+            notched = notch_filter(filtered_time_series, eeg.sampling_frequency, freqs=[50, 60, 100])
+            processed_data[idx] = notched
+              
+        eeg.preprocessing_history.append({'bandpass': {'lowcut': 1, 'highcut': 100, 'notch_freqs': [50, 60, 100]}})
+        
+    # Motion Correct -> Not implemented
+    processed_data = motion_correction(processed_data) 
+    eeg.preprocessing_history.append({'motion_correction': {}})
     
-    for idx in range(len(data)):
-        filtered_time_series = butter_bandpass_filter(data[idx], 1, 100, eeg.sampling_frequency, 5)
-        notched = notch_filter(filtered_time_series, eeg.sampling_frequency, freqs=[50, 60, 100])
-        filtered[idx] = notched
-
-    motion_corrected = motion_correction(filtered) 
-
-    averaged = common_average_reference_filter(motion_corrected)
+    # Common Average Refrence 
+    processed_data = common_average_reference_filter(processed_data)
+    eeg.preprocessing_history.append({'common_average_reference': {}})
     
-    normalized = normalize(averaged, znorm=True)
-
-    eeg.channel_data =  normalized
-    return normalized
+    # Normalization
+    if normalization:
+        processed_data = normalize(processed_data, znorm=True)
+        eeg.preprocessing_history.append({'normalize': {'znorm': True}})
+    
+    # Replace channel data
+    eeg.channel_data =  processed_data
+    return eeg
 
 band_ranges_spec = {
         "Delta (0.5-4 Hz)": (0.5, 4),

@@ -7,7 +7,10 @@ from wrappers.eeg import EEG
 eeg = EEG("data/FeaturesTesting.hdf5")
 eeg.print() # Inspect information retreived from hdf5 file. 
 
-trim(eeg=eeg, cut_from_start=5.56, cut_from_end=0)
+trim(eeg=eeg, cut_from_start=5, cut_from_end=5)
+preprocess(eeg, bandpass=True, normalization=True)
+
+
 eeg.print()
 #new_eeg = eeg.write("data/FeaturesTesting_PROCESSED.hdf5")
 #new_eeg.print()

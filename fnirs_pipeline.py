@@ -3,9 +3,25 @@ from preprocessing.fnirs import preprocess_snirf
 from visualization.fnirs import plot_snirf, plot_psd_snirf
 from analysis.fnirs import epochs_snirf
 
-paths, snirfs = find_snirf_in_folder("data/OMID-13-12-024")
+paths, snirfs = find_snirf_in_folder("data/DANIEL-28-01-2025")
 
-preprocessed = [preprocess_snirf(f,) for f in snirfs]
+preprocessed = [preprocess_snirf(f) for f in snirfs]
+
+preprocessed_sr = [preprocess_snirf(f, spike_removal=True) for f in snirfs]
+
+plot_snirf(preprocessed[0], False)
+plot_psd_snirf(preprocessed[0], False)
+
+plot_snirf(preprocessed_sr[0], False)
+plot_psd_snirf(preprocessed_sr[0], False)
+import matplotlib.pyplot as plt
+plt.show()
+#[plot_snirf(f) for f in preprocessed]
+#[plot_psd_snirf(f) for f in preprocessed]
+#[plot_snirf(f) for f in preprocessed_sr]
+#[plot_psd_snirf(f) for f in preprocessed_sr]
+
+exit()
 epochs, order = [epochs_snirf(f, tmin=-2, tmax=15) for f in snirfs]
 
 #preprocessed_sr = [preprocess_snirf(f, tddr=True, ) for f in snirfs]

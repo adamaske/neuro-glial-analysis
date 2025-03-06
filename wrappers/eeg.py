@@ -18,11 +18,12 @@ def parse_xml(xml_str):
     return parsed_data
 
 class EEG:
-    def __init__(self, filepath:str=""):
-        if filepath != "":
-            self.read(filepath)
+    def __init__(self, hdf_filepath:str=""):
+        if hdf_filepath != "":
+            self.read(hdf_filepath)
+    
+        self.preprocessing_history = []
         
-        pass
     
     def print_features(self):
         assert(len(self.onsets) == len(self.descs)) # 
@@ -153,4 +154,10 @@ class EEG:
 
         return EEG(new_filepath)
     
+    def trim(self, cut_from_start:float, cut_from_end:float):
+        
+        pass
     
+    def preprocess(self, filtering=True, normalization=True, ):
+        
+        pass
