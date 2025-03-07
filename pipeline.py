@@ -1,8 +1,8 @@
 import os
 import glob
 from wrappers.fnirs import fNIRS
-#from wrappers.eeg import EEG
-#from wrappers.eeg_fnirs import EEG_fNIRS
+from wrappers.eeg import EEG
+from wrappers.eeg_fnirs import EEG_fNIRS
 
 # NOTE : This pipeline expects a specific folder structure :
 # top-level/
@@ -10,6 +10,10 @@ from wrappers.fnirs import fNIRS
 #       trial01/
 #           .snirf
 #           .hdf5 
+#       trial_02/
+#           .snirf 
+#           .hdf5
+#   sub02/...
 # and so on
 
 def locate_experiment_files(folderpath: str):
@@ -80,16 +84,26 @@ def locate_experiment_files(folderpath: str):
                 else:
                     hdf_path = hdf_files[0]
             
+            
             print(f"{trial_path} :")
-            print(f"snirf_path : ", snirf_path)
-            print(f"hdf_path : ", hdf_path)
-            fnirs = fNIRS(snirf_path)
-            fnirs.print()
-            #eeg = EEG(hdf_path)
-            #
-            #eeg_fnirs = EEG_fNIRS(eeg, fnirs)
-            #print("Constructed EEG : ", eeg.print())
-            #print("Constructed fNIRS : ", fnirs.print())
+            fnirs = None
+            eeg = None
+            eeg_fnirs = None
+            
+            if snirf_path:
+                
+                print(f"snirf_path : ", snirf_path)
+                fnirs = fNIRS(snirf_path)
+                fnirs.print()
+            
+            if hdf_path:
+                
+                print(f"hdf_path : ", hdf_path)
+                eeg = EEG(hdf_filepath=hdf_path)
+                eeg.print()
+            
+            if snirf_path and hdf_path:
+                eeg_fnirs = EEG_fNIRS
             
     
 

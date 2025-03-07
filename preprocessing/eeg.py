@@ -13,7 +13,7 @@ def remove_movement_artifacts(data, n_components=5):
     return pca.inverse_transform(transformed).T
 
 def trim(eeg:EEG, cut_from_start:float, cut_from_end:float):
-    print(f"Trimming EEG : (-{cut_from_start}, {cut_from_end})")
+    print(f"Trimming EEG : [ {-cut_from_start}, {cut_from_end} ]")
     s_freq = eeg.sampling_frequency
     
     sample_num = eeg.channel_data.shape[1]
