@@ -4,12 +4,14 @@ from visualization.eeg import inspect_channels, inspect_channel_by_channel
 from analysis.eeg import epochs, event_related_potentials, short_time_fourier_transform, multi_channel_stft, continuous_wavelet_transform, multi_channel_cwt
 from wrappers.eeg import EEG
 
-eeg = EEG("data/FeaturesTesting.hdf5")
+eeg = EEG("data/Adam_RestingState.hdf5")
 eeg.print() # Inspect information retreived from hdf5 file. 
 
 trim(eeg=eeg, cut_from_start=5, cut_from_end=5)
-preprocess(eeg, bandpass=True, normalization=True)
+preprocess(eeg, bandpass=True, normalization=True, ica=True)
 
+inspect_channels(eeg.channel_data, eeg.sampling_frequency)
+inspect_channel_by_channel(eeg.channel_data, eeg.sampling_frequency)
 
 eeg.print()
 #new_eeg = eeg.write("data/FeaturesTesting_PROCESSED.hdf5")

@@ -70,18 +70,29 @@ def motion_correction(data):
     return motion_corrected
     
 
-def preprocess(eeg:EEG, bandpass=True, normalization=True,): 
+def preprocess(eeg:EEG, bandpass=True, normalization=True, ica=True): 
+    
     # Copy data to modify
     processed_data = eeg.channel_data.copy()
+    if ica:
+        ica = FastICA(n_components=processed_data.shape[0])
+        transformed_ica = ica.fit_transform(processed_data.transpose())  # Transpose so PCA works on timepoints
+        transformed_ica[:, :processed_data.shape[0]-1] = 0  
+        cleaned_ica = ica.inverse_transform(transformed_ica).transpose()  # Transpose back
+        eeg.preprocessing_history.append({'ica': {}})
+        processed_data = cleaned_ica
+        
+        
     if bandpass: # Apply Bandpass filtering -> 1 to 100 Hz, 50, 60, 100 Hz notch filter
         for idx in range(len(processed_data)):
-            filtered_time_series = butter_bandpass_filter(processed_data[idx], 1, 100, eeg.sampling_frequency, 5)
+            filtered_time_series = butter_bandpass_filter(processed_data[idx], 8, 30, eeg.sampling_frequency, 10)
             notched = notch_filter(filtered_time_series, eeg.sampling_frequency, freqs=[50, 60, 100])
             processed_data[idx] = notched
               
         eeg.preprocessing_history.append({'bandpass': {'lowcut': 1, 'highcut': 100, 'notch_freqs': [50, 60, 100]}})
         
-    # Motion Correct -> Not implemented
+    
+    # Motion Correction -> Not implemented
     processed_data = motion_correction(processed_data) 
     eeg.preprocessing_history.append({'motion_correction': {}})
     

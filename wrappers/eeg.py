@@ -55,11 +55,14 @@ class EEG:
         
         # 'AsynchronData' : This contains Features / Markers
         async_data_group = self.hdf ["AsynchronData"] 
-        self.feature_onsets = np.array(async_data_group["Time"]).T[0]
-        self.feature_descriptions = np.array(async_data_group["TypeID"]).T[0]
-        print("feature_onsets : ", self.feature_onsets)
-        print("feature_descriptions : ", self.feature_descriptions) 
-        
+        if async_data_group.get("Time"):
+            self.feature_onsets = np.array(async_data_group["Time"]).T[0]
+            self.feature_descriptions = np.array(async_data_group["TypeID"]).T[0]
+            print("feature_onsets : ", self.feature_onsets)
+            print("feature_descriptions : ", self.feature_descriptions) 
+        else:
+            self.feature_onsets = []
+            self.feature_descriptions = []
         # 'AcquisitionTaskDescription' 
         acquisition_task_desc = parse_xml(rawdata_group["AcquisitionTaskDescription"].asstr()[0])
         channel_properties = acquisition_task_desc.get("ChannelProperties")
@@ -153,6 +156,11 @@ class EEG:
             print(f"Wrote HDF5 to {new_filepath}")
 
         return EEG(new_filepath)
+    
+    def to_edf(self):
+        
+        
+        pass
     
     def trim(self, cut_from_start:float, cut_from_end:float):
         

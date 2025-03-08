@@ -1,11 +1,16 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from hrf import chrf
+from hrf import double_gamma_chrf
 
 t = np.linspace(0, 20, 100)
-hrf = chrf(t, 6, 16, 1, 1, 1/6)
+hrf = double_gamma_chrf(t, 6, 16, 1, 1, 1/6) # As noted in Lindquist 2009
 
+tmin = 0
+tmax = 20
+
+for snirf in snrifs:
+    
 #Parameters
 duration = 15  # seconds
 sampling_rate = 5  # Hz
