@@ -1,6 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+from hrf import double_gamma_chrf
+    
+    
 def glm(y, x):
     """
     Y = BX + e\n
@@ -75,46 +78,54 @@ def test_beta_value_calculation():
 
     plt.show()
     
+    
+def sliding_window_glm(y, x,  num_samples, sample_rate, window_size, step_size, hrf):
+    
+    from hrf import double_gamma_chrf
+    # Here there are two alternatives, do we want to apply the same X across each window, or should there also
+    # be a window into the x
+    window_size = int(window_size * sample_rate)  
+    step_size = int(step_size * sample_rate) 
+    beta_values = np.zeros(num_samples)
+    
+    
+    duration = 15  # seconds
+    sampling_rate = 5  # Hz
+    num_samples = int(duration * sampling_rate)
+    time = np.linspace(0, duration, num_samples)
+    
+    for i in range(0, num_samples- window_size+(window_size // 2), step_size):
+        window_start = i
+        window_end = i + window_size
+
+        window_y = y[window_start:window_end]
+        
+        
+        #hrf = double_gamma_chrf(np.linspace(0, window_y.shape[0], window_y.shape[0]), 6, 16, 1, 1, 1/6)
+        
+        beta = glm(window_y, hrf[window_start:window_end])
+            
+        center_index = window_start + (window_size // 2)
+        beta_values[center_index] = beta #add beta value to the correct index
+        
+        
+        #plt.subplot(2, 1, 1)
+        #
+        #plt.title(f"Signal : {window_start/sample_rate}-{window_end/sample_rate}")
+        #plt.plot(window_y)
+        #plt.subplot(2, 1, 2)
+        #plt.title(f"HRF a1=6, a2=16, b1=b2=1, c=1/6")
+        #plt.plot(hrf)
+        #
+        #plt.show()
+        #print("window_y : ", window_y.shape)
+        #print("hrf :", hrf.shape)
+        
+    return beta_values
+    
 def test_sliding_window_glm():
     
     
-    from hrf import double_gamma_chrf
-    
-    
-    def sliding_window_glm(y, x,  num_samples, sample_rate, window_size, step_size,):
-        # Here there are two alternatives, do we want to apply the same X across each window, or should there also
-        # be a window into the x
-
-        window_size = int(window_size * sample_rate)  
-        step_size = int(step_size * sample_rate) 
-        beta_values = np.zeros(num_samples)
-        
-        for i in range(0, num_samples- window_size+(window_size // 2), step_size):
-            window_start = i
-            window_end = i + window_size
-    
-            window_y = y[window_start:window_end]
-            hrf = double_gamma_chrf(np.linspace(0, window_y.shape[0], window_y.shape[0]), 6, 16, 1, 1, 1/6)
-            
-            beta = glm(window_y, hrf)
-                
-            center_index = window_start + (window_size // 2)
-            beta_values[center_index] = beta #add beta value to the correct index
-            
-            
-            #plt.subplot(2, 1, 1)
-            #
-            #plt.title(f"Signal : {window_start/sample_rate}-{window_end/sample_rate}")
-            #plt.plot(window_y)
-            #plt.subplot(2, 1, 2)
-            #plt.title(f"HRF a1=6, a2=16, b1=b2=1, c=1/6")
-            #plt.plot(hrf)
-            #
-            #plt.show()
-            #print("window_y : ", window_y.shape)
-            #print("hrf :", hrf.shape)
-            
-        return beta_values
     
     #Parameters
     duration = 15  # seconds
