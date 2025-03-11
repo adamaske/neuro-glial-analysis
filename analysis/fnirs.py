@@ -32,7 +32,7 @@ def epochs_snirf(snirf:RawSNIRF, tmin, tmax):
     tmax_sample = int(tmax * s_freq)
 
     for event_idx, event_onset in enumerate(event_onsets):
-        event_desc = event_order[event_idx]
+        event_desc = int(event_order[event_idx])
 
         onset_sample = int(event_onset * s_freq) # Onset frame
 

@@ -168,7 +168,7 @@ def preprocess_snirf(snirf, od=True, hb=True, filter=True, cv=False, tddr=False,
     # Bandpass Filtering
     if filter:
         lowcut = 0.01 
-        highcut = 0.07
+        highcut = 0.5
         order = 10
         current = bandpass_filter_snirf(current, lowcut, highcut, order)
         
