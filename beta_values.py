@@ -77,9 +77,9 @@ def test_beta_value_calculation():
     plt.grid(True)
 
     plt.show()
+
     
-    
-def sliding_window_glm(y, x,  num_samples, sample_rate, window_size, step_size, hrf):
+def sliding_window_glm(y, x, num_samples, sample_rate, window_size, step_size, hrf):
     
     from hrf import double_gamma_chrf
     # Here there are two alternatives, do we want to apply the same X across each window, or should there also
@@ -128,11 +128,11 @@ def test_sliding_window_glm():
     
     
     #Parameters
-    duration = 15  # seconds
+    duration = 20  # seconds
     sampling_rate = 5  # Hz
     num_samples = int(duration * sampling_rate)
     time = np.linspace(0, duration, num_samples)
-    mean = 10
+    mean = 14
     std_dev = 2
     # Gaussian time series
     gaussian_time_series = np.exp(-0.5 * ((time - mean) / std_dev)**2)
@@ -146,30 +146,19 @@ def test_sliding_window_glm():
     # HRF
     hrf = double_gamma_chrf(time, 6, 16, 1, 1, 1/6)
     
-    betas = sliding_window_glm(gaussian_time_series, hrf, num_samples, sampling_rate, window_size=3, step_size=1)   
-             
-    plt.figure(figsize=(12, 6))
+    betas = sliding_window_glm(gaussian_time_series, hrf, num_samples, sampling_rate, window_size=3, step_size=1, hrf=hrf)   
+    betas = betas[betas != 0]    
+    plt.figure(figsize=(12, 8))
 
-    plt.subplot(3, 1, 1)
-    plt.plot(time, gaussian_time_series)
-    plt.title("Gaussian Time Series (5 Hz)")
-    plt.xlabel("Time (seconds)")
-    plt.ylabel("Amplitude")
+    plt.plot(time, gaussian_time_series, label="Signal", color="black", linewidth=2)
+    plt.plot(time, hrf, label="cHRF", color="red", linewidth=2)
+    plt.plot(np.linspace(0, duration, len(betas)), betas, color="green", label="Beta (GLM)", linewidth=2)
+    plt.ylabel("Amplitude", fontsize=15)
+    plt.xlabel("Time (seconds)", fontsize=15)
+    plt.legend(fontsize=15)
     plt.grid(True)
 
-    plt.subplot(3, 1, 2)
-    plt.plot(time, hrf)
-    plt.title("Doble Gamma cHRF")
-    plt.xlabel("Time (seconds)")
-    plt.ylabel("Amplitude")
-    plt.grid(True)
-    
-    plt.subplot(3, 1, 3)
-    plt.plot(time, betas)
-    plt.title("Sliding Window Beta Values")
-    plt.xlabel("Time (seconds)")
-    plt.ylabel("Amplitude")
-    plt.grid(True)
+    plt.title(f"GLM: Gaussian Signal & cHRF\nBeta (integral) = {np.trapezoid(betas, np.linspace(0, duration, len(betas)))}", fontsize=15)
     plt.show()
     
 if __name__ == "__main__":

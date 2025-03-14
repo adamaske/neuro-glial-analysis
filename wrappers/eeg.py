@@ -89,11 +89,11 @@ class EEG:
         
         #   'SubjectDescription'
         subject_desc = parse_xml(rawdata_group["SubjectDescription"].asstr()[0])
-        comment = format_comment(subject_desc.get("Comment"))
-        first_name = subject_desc.get("FirstName")
-        last_name = subject_desc.get("LastName")
-        print("comment : ", comment)
-        print("name : ", first_name, " ", last_name)
+        #comment = format_comment(subject_desc.get("Comment"))
+        #first_name = subject_desc.get("FirstName")
+        #last_name = subject_desc.get("LastName")
+        #print("comment : ", comment)
+        #print("name : ", first_name, " ", last_name)
         
         self.hdf.close()
         # 'SavedFeatures' # NOTE : This is not important

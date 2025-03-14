@@ -7,8 +7,8 @@ from hrf import double_gamma_chrf
 from beta_values import glm, sliding_window_glm
 
 # Montage Information
-rois = {"S1"    : ["S1_D1", "S1_D2"],
-        "S2"    : ["S4_D4", "S4_D10"],
+rois = {"S1"    : ['S8_D16', 'S9_D1', 'S9_D5', 'S9_D9'],
+        "S2"    : ['S8_D16', 'S9_D1', 'S9_D5', 'S9_D9',],
         "M1"    : ['S14_D12', 'S14_D15'],
         "SMA"   : ['S5_D6', 'S5_D7'],
         "PMA"   : ['S11_D11', 'S12_D2', 'S12_D11'],
@@ -25,9 +25,8 @@ paths, snirfs = find_snirf_in_folder("data/OMID-13-12-024")
 snirfs = [preprocess_snirf(f) for f in snirfs]
 
 s_freq = snirfs[0].info["sfreq"]
-
-
-
+#print(snirfs[0].info["ch_names"])
+#exit()
 tmin = 0
 tmax = 20
 
@@ -67,6 +66,8 @@ for i, channel_name in enumerate(subject_epoch_dict):
 epoch_dict = subject_epoch_dict
 
 subject_channel_beta_values = {}
+subject_channel_block_averages = {}
+subject_channel_block_averages_normalized = {}
 for i, channel_name in enumerate(epoch_dict):
     
     parts = channel_name.split()
@@ -80,20 +81,26 @@ for i, channel_name in enumerate(epoch_dict):
     else:
         raise ValueError(f"Unexpected wavelength: {wavelength}")
     
+    if source_detector not in subject_channel_block_averages:
+        subject_channel_block_averages[source_detector] = {1 : {"HbO" : 0, "HbR" : 0},
+                                                           2 : {"HbO" : 0, "HbR" : 0}}
+        
+    if source_detector not in subject_channel_block_averages_normalized:
+        subject_channel_block_averages_normalized[source_detector] = {1 : {"HbO" : 0, "HbR" : 0}, 
+                                                                      2 : {"HbO" : 0, "HbR" : 0}}
     if source_detector not in subject_channel_beta_values:
         subject_channel_beta_values[source_detector] = {1 : {"HbO" : 0, "HbR" : 0}, 
-                                                        2 : {"HbO" : 0, "HbR" : 0}} 
+                                                        2 : {"HbO" : 0, "HbR" : 0}}
     
     for j, event_description in enumerate(epoch_dict[channel_name]):
         event_desc = int(event_description)
-        if event_desc not in subject_channel_beta_values[source_detector]: # We dont care about the events not in the event dict
+        if event_desc not in subject_channel_beta_values[source_detector]: # Ignore non relevant events
             continue
         
-        marker = markers[event_desc] # What marker are we looking at 
+        marker = markers[event_desc] 
         
         event_blocks = epoch_dict[channel_name][event_description]
-        
-        # Pre-normalization ? 
+
         # Method 1 : Average all the blocks and then calculate beta
 
         block_avg = np.mean(event_blocks, axis=0)
@@ -104,8 +111,13 @@ for i, channel_name in enumerate(epoch_dict):
         hrf = double_gamma_chrf(block_time, 6, 16, 1, 1, 1/6)
         beta_value = glm(block_avg_normalized, hrf)
 
-        subject_channel_beta_values[source_detector][event_desc][channel_type] = float(beta_value)
-        
+        # Store The Beta Value  [channel_name][Pronation or Supination][HbO or HbR]
+        subject_channel_beta_values[source_detector][event_desc][channel_type] = beta_value
+        # Store the block averaged channel
+        subject_channel_block_averages[source_detector][event_desc][channel_type] = block_avg
+
+        # Store the normalized block average
+        subject_channel_block_averages_normalized[source_detector][event_desc][channel_type] = block_avg_normalized
         # Method 2 : Calculate beta for all blocks, then average them
         #beta_values = []
         #normalized_blocks = []
@@ -125,37 +137,100 @@ for i, channel_name in enumerate(epoch_dict):
                 block_time = np.linspace(tmin, tmax, len(block))
                 block_normalized = (block - np.min(block)) / (np.max(block) - np.min(block))
                 plt.plot(block_time, block_normalized, label=f"Block {k+1}")
+                
             plt.plot(block_time, block_avg_normalized, label="Average Block", linewidth=3, color='black')
-            plt.plot(block_time, hrf, label="cHRF", linewidth=3, color='red')
+            plt.plot(block_time, hrf, label=f"cHRF", linewidth=3, color="red")
+            
             plt.xlabel("Time", fontsize=15)
             plt.ylabel("Signal Amplitude", fontsize=15)
-            plt.title(f"Averaged Block: Channel {source_detector} {channel_type}\n{marker} : {beta_value}", fontsize=15)
+            plt.title(f"Averaged Block: Channel {source_detector} {channel_type}\n {marker} : {beta_value} (beta)", fontsize = 15)#{marker} : {beta_value}", fontsize=15)
             plt.legend(fontsize=15)
             plt.grid(True)
             plt.show()    
 
-rest_hbo = []
-right_foot_hbo = []
+# Inspect Per Channel Beta Values
 for i, channel_name in enumerate(subject_channel_beta_values):
-    
-    events = []
-    hbos = []
-    hbrs = []
-
+    print(f"{channel_name} : ")
     for k, event in enumerate(subject_channel_beta_values[channel_name]):
-        events.append(markers[event])
+        hbo = subject_channel_beta_values[channel_name][event]["HbO"]
+        hbr = subject_channel_beta_values[channel_name][event]["HbR"]
+        print(f"{markers[event]} : HbO={hbo}, HbR={hbr}")
 
-        hbos.append(subject_channel_beta_values[channel_name][event]["HbO"])
-        hbrs.append(subject_channel_beta_values[channel_name][event]["HbR"])
+# Conduct ROI based ->
+subject_roi_block_average = {}
+subject_roi_block_average_normalized = {}
+subject_roi_beta_values = {}
 
-    rest_hbo.append(hbos[0])
-    right_foot_hbo.append(hbos[1])
-    print(f"{channel_name} : {events}")
-    print(f"HbO : {hbos}")
-    print(f"HbR : {hbrs}")
+for i, roi in enumerate(rois):
 
-print(f"Average Right Foot HbO : {np.mean(rest_hbo)}")
-print(f"Average Left Foot HbO : {np.mean(right_foot_hbo)}")
+    # Collect the 
+    #print(roi)
+    if channel_name not in subject_roi_block_average:
+        subject_roi_block_average[roi] = {1 : {"HbO" : 0, "HbR" : 0},
+                                                   2 : {"HbO" : 0, "HbR" : 0}} 
+    if channel_name not in subject_roi_block_average_normalized:
+        subject_roi_block_average_normalized[roi] = {1 : {"HbO" : 0, "HbR" : 0},
+                                                   2 : {"HbO" : 0, "HbR" : 0}} 
+    if channel_name not in subject_roi_beta_values:
+        subject_roi_beta_values[roi] = {1 : {"HbO" : 0, "HbR" : 0},
+                                                 2 : {"HbO" : 0, "HbR" : 0}} 
+
+    roi_channel_names = rois[roi]
+
+    for j, event in enumerate(subject_roi_block_average[roi]):
+
+        for k, channel_type in enumerate(subject_roi_block_average[roi][event]):
+            #channels = subject_channel_block_averages[roi_channel_names][event][channel_type]
+            channels = []
+
+            for k, channel_name in enumerate(roi_channel_names  ):
+                if channel_name not in subject_channel_block_averages:
+                    raise ValueError(f"ROI-channel {channel_name} not found...")
+                
+                block_averaged_channel = subject_channel_block_averages[channel_name][event][channel_type]
+                channels.append(block_averaged_channel)
+
+            # Average the Channels
+            block_avg = np.mean(channels, axis=0)
+            block_avg_normalized = (block_avg - np.min(block_avg)) / (np.max(block_avg) - np.min(block_avg))
+
+            subject_roi_block_average[roi][event][channel_type] = block_avg
+            subject_roi_block_average_normalized[roi][event][channel_type] = block_avg_normalized
+            # Calculate Beta Value
+            block_time = np.linspace(tmin, tmax, len(block_avg))
+
+            hrf = double_gamma_chrf(block_time, 6, 16, 1, 1, 1/6)
+            beta_value = glm(block_avg_normalized, hrf)
+
+            subject_roi_beta_values[roi][event][channel_type] = float(beta_value)
+
+            if False: # Plot
+                plt.figure(figsize=(12, 8))
+                for l, channel_name in enumerate(roi_channel_names):
+                    channel_data = channels[l]
+
+                    channel_time = np.linspace(tmin, tmax, len(channel_data))
+                    channel_normalized = (channel_data - np.min(channel_data)) / (np.max(channel_data) - np.min(channel_data))
+                    plt.plot(channel_time, channel_normalized, label=channel_name)
+
+                plt.plot(block_time, block_avg_normalized, label="Average Block", linewidth=4, color='black')
+                plt.plot(block_time, hrf, label=f"cHRF", linewidth=4, color="red")
+
+                plt.xlabel("Time", fontsize=15)
+                plt.ylabel("Signal Amplitude", fontsize=15)
+                plt.title(f"Averaged Block: ROI : {roi} {channel_type}\n {markers[event]} : {beta_value} (beta)", fontsize = 15)#{marker} : {beta_value}", fontsize=15)
+                plt.legend(fontsize=15)
+                plt.grid(True)
+                plt.show()    
+
+
+# Inspect Per Channel Beta Values
+for i, roi in enumerate(subject_roi_beta_values):
+    print(f"{roi} : ")
+    for k, event in enumerate(subject_roi_beta_values[roi]):
+        hbo = subject_roi_beta_values[roi][event]["HbO"]
+        hbr = subject_roi_beta_values[roi][event]["HbR"]
+        print(f"{markers[event]} : HbO={hbo}, HbR={hbr}")
 
 exit()
 

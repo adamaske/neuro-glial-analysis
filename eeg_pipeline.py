@@ -4,11 +4,11 @@ from visualization.eeg import inspect_channels, inspect_channel_by_channel
 from analysis.eeg import epochs, event_related_potentials, short_time_fourier_transform, multi_channel_stft, continuous_wavelet_transform, multi_channel_cwt
 from wrappers.eeg import EEG
 
-eeg = EEG("data/Adam_RestingState.hdf5")
+eeg = EEG("data/omid_eegfnirs/TwoHandOmid2025.03.13_13.02.35.hdf5")
 eeg.print() # Inspect information retreived from hdf5 file. 
 
-trim(eeg=eeg, cut_from_start=5, cut_from_end=5)
-preprocess(eeg, bandpass=True, normalization=True, ica=True)
+trim(eeg=eeg, cut_from_start=10, cut_from_end=10)
+preprocess(eeg, bandpass=True, normalization=False, ica=False)
 
 inspect_channels(eeg.channel_data, eeg.sampling_frequency)
 inspect_channel_by_channel(eeg.channel_data, eeg.sampling_frequency)
@@ -32,9 +32,6 @@ short_time_fourier_transform(preprocessed[0], sampling_frequency)
 
 exit()
 epochs, order = epochs(preprocessed, sampling_frequency, -2, 5, features_onset, features_order, features_desc)
-
-event_related_potentials(preprocessed, sampling_frequency, P=[50, 150, 250], N=[100, 200, 300], 
-                         onsets=features_onset, order=features_order, desc=features_desc)
 
 inspect_channels(preprocessed, sampling_frequency)
 inspect_channel_by_channel(preprocessed, sampling_frequency)
