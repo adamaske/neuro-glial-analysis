@@ -6,6 +6,106 @@ from datasets.fnirs import read_snirf, find_snirf_in_folder
 from preprocessing.fnirs import preprocess_snirf
 
 # Montage Information
+import numpy as np
+import pywt
+from scipy.signal import correlate
+
+def normalized_cross_correlation(ts1, ts2):
+    """Calculates normalized cross-correlation."""
+    ts1_norm = (ts1 - np.mean(ts1)) / np.std(ts1)
+    ts2_norm = (ts2 - np.mean(ts2)) / np.std(ts2)
+    cross_corr = np.correlate(ts1_norm, ts2_norm, mode='full')
+    return cross_corr / (len(ts1_norm))
+def calculate_composite_correlation(ts1, ts2, wavelet_frequency_band=(8, 12)):
+    """Calculates a composite correlation measure."""
+
+    # 1. Pearson's r
+    pearson_r, pearson_p = pearsonr(ts1, ts2)
+
+    # 2. Cross-correlation
+    cross_corr = normalized_cross_correlation(ts1, ts2)
+    max_cross_corr = np.max(cross_corr)
+    lag_max_cross_corr = np.argmax(cross_corr) - (len(ts1) - 1) #calculate the lag
+    #get the correlation at zero lag.
+    zero_lag_cross_corr = cross_corr[len(ts1)-1]
+
+    # 3. Wavelet coherence
+    coeffs1, freqs = pywt.cwt(ts1, scales=np.arange(1, 129), wavelet='cmor1.5-1.0')
+    coeffs2, _ = pywt.cwt(ts2, scales=np.arange(1, 129), wavelet='cmor1.5-1.0')
+    coherence = np.abs(np.sum(coeffs1 * np.conj(coeffs2), axis=0) / (np.linalg.norm(coeffs1, axis=0) * np.linalg.norm(coeffs2, axis=0)))
+    #get the average coherence within a frequency band.
+    wavelet_avg_coherence = np.mean(coherence[np.where((freqs>=wavelet_frequency_band[0]) & (freqs<=wavelet_frequency_band[1]))])
+
+    # 4. Normalization (min-max scaling)
+    features = np.array([pearson_r, max_cross_corr, lag_max_cross_corr, zero_lag_cross_corr, wavelet_avg_coherence])
+    min_vals = np.min(features)
+    max_vals = np.max(features)
+    normalized_features = (features - min_vals) / (max_vals - min_vals)
+
+    # 5. Concatenation/Combination
+    composite_correlation = np.mean(normalized_features) # or np.concatenate(normalized_features)
+
+    return composite_correlation
+
+# Example usage
+time_series_1 = np.array([1, 2, 3, 4, 5, 6, 7, 8, 15, 16, 17, 18])
+time_series_2 = np.array([1, 2, 3, 4, 5, 6, 7, 8, 15, 16, 17, 18])
+
+composite_corr = calculate_composite_correlation(time_series_1, time_series_2)
+print(f"Composite correlation: {composite_corr}")
+
+exit()
+
+# Example time series
+time_series_1 = np.array([1, 2, 3, 4, 5, 6, 7, 8, 15, 16, 17, 18])
+time_series_2 = np.array([1, 2, 3, 4, 5, 6, 7, 8, 15, 16, 17, 18])
+
+normalized_cross_correlation_result = normalized_cross_correlation(time_series_1, time_series_2)
+print(f"Cross-correlation: {normalized_cross_correlation_result}")
+# Using the maximum value was recomended by Mohanty 2020
+print(f"Cross-correlation Maximum: {max(normalized_cross_correlation_result)}") 
+print(f"Cross-correlation Mean: {np.mean(np.abs(normalized_cross_correlation_result))}")
+
+pearson_correlation, pearson_p = pearsonr(time_series_1, time_series_2)
+print(f"Pearson's r: {pearson_correlation} @ {pearson_p}")
+# Create the lags array.
+lags = np.arange(-len(time_series_1) + 1, len(time_series_2))
+
+# Plot the cross-correlation
+plt.figure(figsize=(10, 6))
+plt.plot(lags, normalized_cross_correlation_result)
+plt.xlabel('Lag')
+plt.ylabel('Cross-correlation')
+plt.title('Cross-correlation of Two Time Series')
+plt.grid(True)
+plt.show()
+exit()
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Example time series data
+time_series_1 = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+time_series_2 = time_series_1#np.array([3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18])
+
+# Calculate cross-correlation
+cross_correlation = np.correlate(time_series_1, time_series_2, mode='full')
+pearson_correlation, p_value =  pearsonr(time_series_1, time_series_2)
+# Create the lags array.
+lags = np.arange(-len(time_series_1) + 1, len(time_series_2))
+
+# Plot the cross-correlation
+plt.figure(figsize=(10, 6))
+plt.plot(lags, cross_correlation)
+plt.xlabel('Lag')
+plt.ylabel('Cross-correlation')
+plt.title('Cross-correlation of Two Time Series')
+plt.grid(True)
+plt.show()
+
+print("cross_correlation : ", max(cross_correlation))
+print("pearson_correlation : ", pearson_correlation)
+
+exit()
 
 
 def pearson_r_channel_by_channel(snirf):
@@ -16,8 +116,7 @@ def pearson_r_channel_by_channel(snirf):
     hbr_indices = []
     hbo_names = []
     hbr_names = []
-
-
+    
     for i, name in enumerate(channel_names):
         parts = name.split()
         source_detector = parts[0]
@@ -191,8 +290,8 @@ def pearson_correlation_roi(snirf, rois):
 
     return hbo_correlation_matrix, hbr_correlation_matrix, hbo_p_value_matrix, hbr_p_value_matrix
 
-snirf = read_snirf("data/OMID-13-12-024/2024-12-13_001/2024-12-13_001.snirf")
-snirf = preprocess_snirf(snirf)
+#snirf = read_snirf("data/2025-02-26.snirf")#data/OMID-13-12-024/2024-12-13_001/2024-12-13_001.snirf")
+#snirf = preprocess_snirf(snirf)
 
 rois = {"S1"    : ['S8_D16', 'S9_D1', 'S9_D5', 'S9_D9'],
         "S2"    : ['S8_D16', 'S9_D1', 'S9_D5', 'S9_D9',],
@@ -202,9 +301,14 @@ rois = {"S1"    : ['S8_D16', 'S9_D1', 'S9_D5', 'S9_D9'],
         "BROCA" : ['S2_D3', 'S2_D4', 'S3_D2', 'S3_D3', 'S3_D10', 'S3_D11', 'S4_D3'],
         }
 
-paths, snirfs = find_snirf_in_folder("data/OMID-13-12-024")
-preprocessed = [preprocess_snirf(f) for f in snirfs]
+#paths, snirfs = find_snirf_in_folder("data/OMID-13-12-024")
+#preprocessed = [preprocess_snirf(f) for f in snirfs]
 
+snirf = read_snirf("data/2025-02-26_003.snirf")
+preprocessed = preprocess_snirf(snirf)
+pearson_r_channel_by_channel(preprocessed)
+plt.show()
+exit()
 hbo_corr_matrices = []
 hbr_corr_matrices = []
 

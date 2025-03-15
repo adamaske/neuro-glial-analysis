@@ -22,6 +22,7 @@ markers = {0: "Rest",
            }
 
 paths, snirfs = find_snirf_in_folder("data/OMID-13-12-024")
+snirfs = [read_snirf("data/2025-02-26_003.snirf")]
 snirfs = [preprocess_snirf(f) for f in snirfs]
 
 s_freq = snirfs[0].info["sfreq"]
@@ -131,7 +132,7 @@ for i, channel_name in enumerate(epoch_dict):
         #avg_beta_value = np.mean(beta_values, axis=0)
 
         # Plotting
-        if False:
+        if True:
             plt.figure(figsize=(12, 8))
             for k, block in enumerate(event_blocks):
                 block_time = np.linspace(tmin, tmax, len(block))
@@ -156,6 +157,7 @@ for i, channel_name in enumerate(subject_channel_beta_values):
         hbr = subject_channel_beta_values[channel_name][event]["HbR"]
         print(f"{markers[event]} : HbO={hbo}, HbR={hbr}")
 
+exit()
 # Conduct ROI based ->
 subject_roi_block_average = {}
 subject_roi_block_average_normalized = {}
