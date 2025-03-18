@@ -1,0 +1,30 @@
+{
+    "regions_of_interest": {
+        "PMA": {
+            "LH": [
+                "S1_D1"
+            ],
+            "RH": [
+                "S1_D2"
+            ]
+        },
+        "SMA": {
+            "LH": [
+                "S2_D2"
+            ],
+            "RH": [
+                "S2_D3"
+            ]
+        }
+    },
+    "subject_ids": [
+        "sub01",
+        "sub02", 
+        "sub03", 
+        "sub04"
+    ],
+    "events": {
+        "1": "Pronation",
+        "2": "Supination"
+    }
+}

@@ -6,6 +6,27 @@ from analysis.fnirs import epochs_snirf
 from hrf import double_gamma_chrf
 from beta_values import glm, sliding_window_glm
 
+import analysis_info 
+info = analysis_info.get_info()
+rois = info["regions_of_interest"]
+subjects = info["subject_ids"]
+events = info["events"]
+markers = events
+
+
+import pickle
+def save_data(data, filename):
+    """Saves data to a file using pickle."""
+    with open(filename, 'wb') as f:
+        pickle.dump(data, f)
+    print(f"Data saved to {filename}")
+
+def load_data(filename):
+    """Loads data from a file using pickle."""
+    with open(filename, 'rb') as f:
+        data = pickle.load(f)
+    return data
+
 # Montage Information
 rois = {"S1"    : ['S8_D16', 'S9_D1', 'S9_D5', 'S9_D9'],
         "S2"    : ['S8_D16', 'S9_D1', 'S9_D5', 'S9_D9',],
@@ -30,26 +51,42 @@ s_freq = snirfs[0].info["sfreq"]
 tmin = 0
 tmax = 20
 
-subject_epoch_dict = {}
-for i, snirf in enumerate(snirfs):
-    print(f"{i} : {paths[i]}")
+def epoch_subject(snirf_files):
+    subject_epoch_dict = {}
+    for i, snirf in enumerate(snirf_files):
+        print(f"{i} : {paths[i]}")
+
+        epoch_dict = epochs_snirf(snirf, tmin, tmax)
     
-    epoch_dict = epochs_snirf(snirf, tmin, tmax)
-   
-    for i, channel_name in enumerate(epoch_dict):
+        for i, channel_name in enumerate(epoch_dict):
 
-        if channel_name not in subject_epoch_dict:
-            subject_epoch_dict[channel_name] = epoch_dict[channel_name]
-            print(f"Added {channel_name} to subject_epoch_dict")
-            continue # We copied the epoch dict, thus we can continue to next channel
-        
-        for j, event in enumerate(epoch_dict[channel_name]):
-            if event in subject_epoch_dict[channel_name]:
-      
-                for block in epoch_dict[channel_name][event]:
-                    subject_epoch_dict[channel_name][event].append(block)
+            if channel_name not in subject_epoch_dict:
+                subject_epoch_dict[channel_name] = epoch_dict[channel_name]
+                print(f"Added {channel_name} to subject_epoch_dict")
+                continue # We copied the epoch dict, thus we can continue to next channel
+            
+            for j, event in enumerate(epoch_dict[channel_name]):
+                if event in subject_epoch_dict[channel_name]:
+                
+                    for block in epoch_dict[channel_name][event]:
+                        subject_epoch_dict[channel_name][event].append(block)
+
+subject_epoch_dict = epoch_subject(snirfs)
 
 
+# Separate HbO and HbR
+hbo_dict = {}
+hbr_dict = {}
+
+for channel_name, event_dict in subject_epoch_dict.items():
+    if "760" in channel_name or "hbr" in channel_name.lower(): 
+        hbr_dict[channel_name] = event_dict
+    elif "850" in channel_name or "hbo" in channel_name.lower():
+        hbo_dict[channel_name] = event_dict
+
+# Seperate out the HbO and HbR
+# Every channel name has either " 760" or " 850", or " hbo" or "hbr" after "S1_D1"..
+# 
 for i, channel_name in enumerate(subject_epoch_dict):
     events = []
     for j, event in enumerate(subject_epoch_dict[channel_name]):
@@ -63,6 +100,8 @@ for i, channel_name in enumerate(subject_epoch_dict):
 # SUCCESS we have epoched all trials for a subject
 
 # NEXT -> Block averaging
+#
+
 epoch_dict = subject_epoch_dict
 
 subject_channel_beta_values = {}
@@ -106,18 +145,19 @@ for i, channel_name in enumerate(epoch_dict):
         block_avg = np.mean(event_blocks, axis=0)
         block_avg_normalized = (block_avg - np.min(block_avg)) / (np.max(block_avg) - np.min(block_avg))
         
-        block_time = np.linspace(tmin, tmax, len(block_avg))
-
-        hrf = double_gamma_chrf(block_time, 6, 16, 1, 1, 1/6)
-        beta_value = glm(block_avg_normalized, hrf)
-
-        # Store The Beta Value  [channel_name][Pronation or Supination][HbO or HbR]
-        subject_channel_beta_values[source_detector][event_desc][channel_type] = beta_value
         # Store the block averaged channel
         subject_channel_block_averages[source_detector][event_desc][channel_type] = block_avg
 
         # Store the normalized block average
         subject_channel_block_averages_normalized[source_detector][event_desc][channel_type] = block_avg_normalized
+        
+        block_time = np.linspace(tmin, tmax, len(block_avg))
+        
+        hrf = double_gamma_chrf(block_time, 6, 16, 1, 1, 1/6)
+        beta_value = glm(block_avg_normalized, hrf)
+
+        # Store The Beta Value  [channel_name][Pronation or Supination][HbO or HbR]
+        subject_channel_beta_values[source_detector][event_desc][channel_type] = beta_value
         # Method 2 : Calculate beta for all blocks, then average them
         #beta_values = []
         #normalized_blocks = []

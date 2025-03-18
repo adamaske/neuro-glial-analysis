@@ -4,6 +4,18 @@ from visualization.fnirs import plot_snirf, plot_psd_snirf
 from analysis.fnirs import epochs_snirf
 
 paths, snirfs = find_snirf_in_folder("data/OMID-13-12-024")
+preprocessed = [preprocess_snirf(f) for f in snirfs]
+
+import numpy as np
+
+import scipy.io
+# Example NumPy array
+
+data = np.array(preprocessed[0].get_data())
+np.save("data/omid_01_processed_channels",data)
+
+scipy.io.savemat('omid_channels.mat', {'channels': data})
+exit()
 print(epochs_snirf(snirfs[0], -5, 15))
 exit()
 epoch_dict = [epochs_snirf(f, tmin=0, tmax=10) for f in snirfs]
