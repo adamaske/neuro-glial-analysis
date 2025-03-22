@@ -12,8 +12,6 @@ import scipy.io
 # Example NumPy array
 
 data = np.array(preprocessed[0].get_data())
-np.save("data/omid_01_processed_channels",data)
-
 scipy.io.savemat('omid_channels.mat', {'channels': data})
 exit()
 print(epochs_snirf(snirfs[0], -5, 15))
