@@ -1,8 +1,15 @@
 from wrappers.eeg import EEG, HDF5toEDFConverter
 
-channel_names = []
+import numpy as np
+import matplotlib.pyplot as plt
 
-paths = ["data/Subject02/Trial 1/HeelSubject22025.03.27_11.14.27.hdf5",
+paths = ["data/Subject01/Trial 1 - Supination/heel2025.03.24_14.27.28.hdf5",
+         "data/Subject01/Trial 2 - Pronation/heel2025.03.24_14.31.33.hdf5",
+         "data/Subject01/Trial 3 - Supination/heel2025.03.24_14.36.01.hdf5",
+         "data/Subject01/Trial 4 - Pronation/heel2025.03.24_14.40.18.hdf5",
+         "data/Subject01/Trial 5 - Supination/heel2025.03.24_14.45.30.hdf5",
+         "data/Subject01/Trial 6 - Pronation/heel2025.03.24_14.50.12.hdf5",
+         "data/Subject02/Trial 1/HeelSubject22025.03.27_11.14.27.hdf5",
          "data/Subject02/Trial 2/HeelSubject22025.03.27_11.17.47.hdf5",
          "data/Subject02/Trial 3/HeelSubject22025.03.27_11.21.29.hdf5",
          "data/Subject02/Trial 4/HeelSubject22025.03.27_11.25.31.hdf5",
@@ -11,8 +18,7 @@ paths = ["data/Subject02/Trial 1/HeelSubject22025.03.27_11.14.27.hdf5",
          ]
 eegs = [EEG(path) for path in paths]
 
-markers = { 3 : "Pronation", 4 : "Supination"}
-
+markers = { 3 : "Pronation", 4 : "Supination"} # NOTE : This can be easily converted into a  P-Indent vs S-Indent, and P-Shear vs S-Shear 
 epochs = {}
     
 for eeg in eegs:
@@ -23,8 +29,8 @@ for eeg in eegs:
     descriptions = eeg.feature_descriptions
     assert(len(onsets) == len(descriptions))
 
-    tmin = -2
-    tmax = 10
+    tmin = 0
+    tmax = 2
 
     for i, desc in enumerate(descriptions):
         if not desc in markers:
@@ -45,10 +51,59 @@ for eeg in eegs:
             epochs[marker] = []
         epochs[marker].append(epoch_data)
    
-     
+matrices = [] 
 for marker in epochs:
     print(f"{marker} : ", len(epochs[marker]))# : ", len(epoch_data[marker]))
     
+    # Calculate FC for this marker
+    marker_epochs  = epochs[marker]
+    
+
+    num_epochs = len(marker_epochs)
+    num_channels = marker_epochs[0].shape[0]  # Assuming all epochs have the same number of channels
+
+    # Initialize an array to store the correlation matrices for each epoch
+    correlation_matrices = np.zeros((num_epochs, num_channels, num_channels))
+
+    for i, epoch in enumerate(marker_epochs):
+        correlation_matrices[i] = np.corrcoef(epoch)  # Calculate correlation matrix for each epoch
+
+    mean_connectivity = np.mean(correlation_matrices, axis=0)
+    matrices.append(mean_connectivity)
+
+    plt.figure(figsize=(8, 6))
+    plt.imshow(mean_connectivity, cmap='RdBu_r', vmin=-1, vmax=1)
+    plt.colorbar(label="Correlation")
+    plt.title(f"Thresholded Mean Corr. Matrix for {marker}")
+    plt.xlabel("Channel")
+    plt.ylabel("Channel")
+    plt.xticks(range(num_channels))
+    plt.yticks(range(num_channels))
+    plt.tight_layout()
+    plt.show()
+for i, marker in enumerate(epochs):
+    
+    threshold = 0.85
+    # Apply threshold during plotting
+    mean_connectivity_to_plot = matrices[i].copy()
+    mean_connectivity_to_plot[np.abs(mean_connectivity_to_plot) < threshold] = 0
+
+
+mean_corr_matrix1 = matrices[0]
+mean_corr_matrix2 = matrices[1]
+
+difference_matrix = mean_corr_matrix1 - mean_corr_matrix2
+plt.figure(figsize=(8, 6))
+plt.imshow(difference_matrix, cmap='RdBu_r', vmin=-1, vmax=1)
+plt.colorbar(label="Correlation Difference")
+plt.title(f"Difference: {markers[4]} - {markers[3]}")
+plt.xlabel("Channel")
+plt.ylabel("Channel")
+plt.xticks(range(mean_corr_matrix1.shape[0]))
+plt.yticks(range(mean_corr_matrix1.shape[0]))
+plt.tight_layout()
+plt.show()
+
 exit()
 
 from datasets.eeg import find_eeg_files_in_folder
