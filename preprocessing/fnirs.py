@@ -168,8 +168,8 @@ def preprocess_snirf(snirf, od=True, hb=True, filter=True, cv=False, tddr=False,
     # Bandpass Filtering
     if filter:
         lowcut = 0.01 
-        highcut = 0.1
-        order = 10
+        highcut = 0.07
+        order = 15
         current = bandpass_filter_snirf(current, lowcut, highcut, order)
         
     # Hemoglobin

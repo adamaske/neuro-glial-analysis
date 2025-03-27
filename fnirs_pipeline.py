@@ -3,6 +3,26 @@ from preprocessing.fnirs import preprocess_snirf
 from visualization.fnirs import plot_snirf, plot_psd_snirf
 from analysis.fnirs import epochs_snirf
 
+
+# Load subject
+sub1 = ["data/subject01/2025-03-24_001_PREPROCESSED.snirf", # Trial 1 - Supination
+        "data/subject01/2025-03-24_002_PREPROCESSED.snirf", # Trial 2 - Pronation
+        "data/subject01/2025-03-24_003_PREPROCESSED.snirf", # Trial 3 - Supination
+        "data/subject01/2025-03-24_004_PREPROCESSED.snirf", # Trial 4 - Pronation
+        "data/subject01/2025-03-24_005_PREPROCESSED.snirf", # Trial 5 - Supination
+        "data/subject01/2025-03-24_006_PREPROCESSED.snirf"  # Trial 6 - Pronation
+        ]
+
+paths, snirfs = find_snirf_in_folder("data/subject01/trials")
+
+preprocessed = [preprocess_snirf(f) for f in snirfs]
+
+from pearson_correlation import pearson_r_channel_by_channel
+
+
+[pearson_r_channel_by_channel(f) for f in preprocessed]
+exit()
+
 paths, snirfs = find_snirf_in_folder("data/OMID-13-12-024")
 preprocessed = [preprocess_snirf(f) for f in snirfs]
 

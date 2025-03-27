@@ -4,7 +4,7 @@ import shutil
 import pathlib
 import numpy as np
 import xml.etree.ElementTree as et
-
+import datetime
 def format_comment(comment: str) -> str:
     lines = comment.strip().split("\n")
     formatted = ", ".join(f"{lines[i]}:{lines[i+1]}" for i in range(0, len(lines), 2) if i+1 < len(lines))
@@ -47,7 +47,7 @@ class EEG:
         
         self.filepath = filepath
         self.hdf = h5py.File(filepath, mode="r+")
-        
+        print(self.hdf.keys)
         # Handle 'RawData' containing the acutal channeld ata
         rawdata_group = self.hdf["RawData"]
         self.channel_data = np.array(rawdata_group["Samples"]).transpose()
@@ -169,3 +169,124 @@ class EEG:
     def preprocess(self, filtering=True, normalization=True, ):
         
         pass
+    
+    import h5py
+import numpy as np
+import xml.etree.ElementTree as ET
+import pyedflib
+
+def parse_xml(xml_string):
+    """Parses XML string and returns a dictionary."""
+    root = ET.fromstring(xml_string)
+    result = {}
+    for child in root:
+        result[child.tag] = child.text
+    return result
+
+class HDF5toEDFConverter:
+    def __init__(self):
+        self.filepath = None
+        self.hdf = None
+        self.channel_data = None
+        self.feature_onsets = None
+        self.feature_descriptions = None
+        self.channel_num = None
+        self.sampling_frequency = None
+        self.acquisition_unit = None
+        self.acquisition_device = None
+        self.session_run = None
+        self.session_comment = None
+
+    def read(self, filepath):
+        print("Reading HDF5 file : ", filepath)
+        
+        self.filepath = filepath
+        self.hdf = h5py.File(filepath, mode="r+")
+        print(self.hdf.keys)
+        # Handle 'RawData' containing the acutal channeld ata
+        rawdata_group = self.hdf["RawData"]
+        self.channel_data = np.array(rawdata_group["Samples"]).transpose()
+        print("Samples : ", self.channel_data.shape)
+        
+        # 'AsynchronData' : This contains Features / Markers
+        async_data_group = self.hdf ["AsynchronData"] 
+        if async_data_group.get("Time"):
+            self.feature_onsets = np.array(async_data_group["Time"]).T[0]
+            self.feature_descriptions = np.array(async_data_group["TypeID"]).T[0]
+            print("feature_onsets : ", self.feature_onsets)
+            print("feature_descriptions : ", self.feature_descriptions) 
+        else:
+            self.feature_onsets = []
+            self.feature_descriptions = []
+        # 'AcquisitionTaskDescription' 
+        acquisition_task_desc = parse_xml(rawdata_group["AcquisitionTaskDescription"].asstr()[0])
+        channel_properties = acquisition_task_desc.get("ChannelProperties")
+        self.channel_num = int(acquisition_task_desc.get("NumberOfAcquiredChannels"))
+        self.sampling_frequency = float(acquisition_task_desc.get("SamplingFrequency"))
+        print("channel_properties : ", channel_properties)
+        print("channel_num : ", self.channel_num )
+        print("sampling_frequency : ", self.sampling_frequency)     
+        
+        #   'DAQDeviceDescription
+        daq_desc = parse_xml(rawdata_group["DAQDeviceDescription"].asstr()[0])
+        self.acquisition_unit = daq_desc.get("Unit") # micro Volts
+        self.acquisition_device = daq_desc.get("Name")
+        print("acquisition_unit : ", self.acquisition_unit)
+        print("acquisition_device : ", self.acquisition_device)
+        
+        #   'SessionDescription'
+        session_desc = parse_xml(rawdata_group["SessionDescription"].asstr()[0])
+        print(session_desc)
+        self.session_run = session_desc.get("Run")
+        self.session_comment = session_desc.get("Comment")
+        print("session_run :", self.session_run)
+        print("session_comment :", self.session_comment)
+        
+        #   'SubjectDescription'
+        subject_desc = parse_xml(rawdata_group["SubjectDescription"].asstr()[0])
+        
+        self.hdf.close()
+
+        return self
+
+    def write_edf(self, output_filepath):
+        """Writes the loaded HDF5 data to an EDF file."""
+        print(f"Writing EDF file: {output_filepath}")
+
+        signal_headers = []
+        for i in range(self.channel_num):
+            signal_headers.append({
+                'label': f'CH{i+1}',
+                'dimension': self.acquisition_unit,
+                'sample_frequency': self.sampling_frequency,
+                'physical_min': np.min(self.channel_data[i]),
+                'physical_max': np.max(self.channel_data[i]),
+                'digital_min': -32768,
+                'digital_max': 32767,
+                'transducer': self.acquisition_device,
+                'prefilter': ''
+            })
+        with pyedflib.EdfWriter(output_filepath, len(signal_headers), file_type=pyedflib.FILETYPE_EDFPLUS) as f:
+            f.setHeader({
+                'technician': '',
+                'recording_additional': "self.session_comment",
+                'patientname': 'patient',
+                'patient_additional': 'asd',
+                'equipment': self.acquisition_device,
+                'admincode': '',
+                'gender': '',
+                'startdate': datetime.datetime.now(),
+                'birthdate': datetime.datetime.now(),
+                'equipment': self.acquisition_device,
+                'recording_additional': "self.session_comment",
+                'patientcode': 'patientcode', #Add patient code
+                'sex' :'m',
+            })
+            f.setSignalHeaders(signal_headers)
+            f.writeSamples(self.channel_data)
+
+            
+            # Write annotations (events/markers)
+            if self.feature_onsets is not None and len(self.feature_onsets) > 0:
+              for onset, description in zip(self.feature_onsets, self.feature_descriptions):
+                f.writeAnnotation(onset / self.sampling_frequency, -1, str(description)) #write annotations individually

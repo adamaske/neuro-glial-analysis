@@ -111,7 +111,8 @@ exit()
 def pearson_r_channel_by_channel(snirf):
     channel_data = snirf.get_data().T  # Transpose to get channels as rows
     channel_names = snirf.info["ch_names"]
-
+    print(channel_names)
+    return
     hbo_indices = []
     hbr_indices = []
     hbo_names = []

@@ -1,0 +1,58 @@
+{
+    "experiment_name": "PostCVitaminDanielTwoHand",
+    "date_time": "21_03_2025_10_37_52",
+    "subject_ID": 1,
+    "trial_number": 1,
+    "blocks": [
+        "Rest",
+        "Left",
+        "Right"
+    ],
+    "durations": [
+        15,
+        10,
+        10
+    ],
+    "block_order": [
+        0,
+        1,
+        0,
+        2,
+        0,
+        1,
+        0,
+        2,
+        0,
+        1,
+        0,
+        2,
+        0,
+        1,
+        0,
+        2,
+        0,
+        1,
+        0,
+        2,
+        0,
+        1,
+        0,
+        2,
+        0
+    ],
+    "block_wait_for_input": [
+        false,
+        false,
+        false
+    ],
+    "markers": {
+        "Start": 0,
+        "End": 1,
+        "rest": 2,
+        "left": 3,
+        "right": 4
+    },
+    "using_fnirs": true,
+    "using_eeg": true,
+    "use_ur3": true
+}

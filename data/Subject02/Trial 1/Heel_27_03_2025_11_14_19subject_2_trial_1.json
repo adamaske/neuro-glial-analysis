@@ -1,0 +1,48 @@
+{
+    "experiment_name": "Heel",
+    "date_time": "27_03_2025_11_14_19",
+    "subject_ID": 2,
+    "trial_number": 1,
+    "blocks": [
+        "Rest",
+        "LEft"
+    ],
+    "durations": [
+        20,
+        10
+    ],
+    "block_order": [
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        1,
+        1,
+        0,
+        1,
+        1,
+        0,
+        1,
+        1,
+        0,
+        1
+    ],
+    "block_wait_for_input": [
+        false,
+        false
+    ],
+    "markers": {
+        "Start": 0,
+        "End": 1,
+        "Rest": 2,
+        "Pronation": 3,
+        "Supination": 4,
+        "Indent": 5,
+        "Shear": 6
+    },
+    "using_fnirs": true,
+    "using_eeg": true,
+    "use_ur3": true
+}
