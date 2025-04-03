@@ -5,6 +5,9 @@ import pathlib
 import numpy as np
 import xml.etree.ElementTree as et
 import datetime
+import pyedflib
+
+
 def format_comment(comment: str) -> str:
     lines = comment.strip().split("\n")
     formatted = ", ".join(f"{lines[i]}:{lines[i+1]}" for i in range(0, len(lines), 2) if i+1 < len(lines))
@@ -19,10 +22,21 @@ def parse_xml(xml_str):
 
 class EEG:
     def __init__(self, hdf_filepath:str=""):
-        if hdf_filepath != "":
-            self.read(hdf_filepath)
-    
+        self.filepath = None
+        self.sampling_frequency = None
+        self.channel_num = None
+        self.channel_data = None
+        self.feature_onsets = None
+        self.feature_descriptions = None
+        self.session_run = None
+        self.session_comment = None
+        self.acquisition_device = None
+        self.acquisition_unit = None
+        
         self.preprocessing_history = []
+        if hdf_filepath != "":
+            self.read_hdf5(hdf_filepath)
+    
         
     
     def print_features(self):
@@ -42,7 +56,7 @@ class EEG:
         print("acquisition_device : ", self.acquisition_device)
         print("acquisition_unit : ", self.acquisition_unit)
         
-    def read(self, filepath):
+    def read_hdf5(self, filepath):
         print("Reading HDF5 file : ", filepath)
         
         self.filepath = filepath
@@ -113,7 +127,8 @@ class EEG:
         
         return self
     
-    def write(self, new_filepath:str) -> "EEG":
+    # TODO : Instead of manual new filepath append something to the already existing filepath
+    def write_hdf5(self, new_filepath:str, append_to_filepath:str) -> "EEG":
         
         old_filepath = self.filepath #  What file to copy
         
@@ -157,136 +172,55 @@ class EEG:
 
         return EEG(new_filepath)
     
-    def to_edf(self):
+    # TODO : Implment
+    def write_edf(self,):
         
         
         pass
     
-    def trim(self, cut_from_start:float, cut_from_end:float):
+    def read_edf(self,):
         
         pass
+    
+    def trim(self, cut_from_start:float=0, cut_from_end:float=0):
+        """Trims the EEG channel data """
+        
+        sample_num = self.channel_data.shape[1]
+        start = int(cut_from_start * self.sampling_frequency)
+        end = sample_num - int(cut_from_end * self.sampling_frequency)
+
+        if start < 0 or end <= len(self.feature_onsets):
+            print("Trim parameters out of bounds, trimming was NOT conducted...")
+            return 
+        
+        self.channel_data = self.channel_data[:, start:end]
+
+        valid_indices = [i for i, onset in enumerate(self.feature_onsets) if start <= onset < end]
+        self.feature_onsets = np.array([self.feature_onsets[i] - start for i in valid_indices])
+        self.feature_descriptions = [self.feature_descriptions[i] for i in valid_indices]
+    
+    def trim_from_features(self, cut_from_first_feature:float=5, cut_from_last_feature:float=10) -> None:
+        """Trims the EEG channel data before the first feature and after the last"""
+        print(f"Trimming EEG : [ First feature - {cut_from_first_feature}, Last feature + {cut_from_last_feature} ]")
+
+        first_feature_onset = self.feature_onsets[0]
+        last_feature_onset = self.feature_onsets[len(self.feature_onsets)-1]
+
+        sample_num = self.channel_data.shape[1]
+        start = int(first_feature_onset - (cut_from_first_feature * self.sampling_frequency))
+        end = int(last_feature_onset + (cut_from_last_feature * self.sampling_frequency))
+
+        if start < 0 or end <= len(self.feature_onsets):
+            print("Trim parameters out of bounds, trimming was NOT conducted...")
+            return 
+        
+        self.channel_data = self.channel_data[:, start:end]
+        
+        valid_indices = [i for i, onset in enumerate(self.feature_onsets) if start <= onset < end]
+        self.feature_onsets = np.array([self.feature_onsets[i] - start for i in valid_indices])
+        self.feature_descriptions = [self.feature_descriptions[i] for i in valid_indices]
     
     def preprocess(self, filtering=True, normalization=True, ):
         
         pass
     
-    import h5py
-import numpy as np
-import xml.etree.ElementTree as ET
-import pyedflib
-
-def parse_xml(xml_string):
-    """Parses XML string and returns a dictionary."""
-    root = ET.fromstring(xml_string)
-    result = {}
-    for child in root:
-        result[child.tag] = child.text
-    return result
-
-class HDF5toEDFConverter:
-    def __init__(self):
-        self.filepath = None
-        self.hdf = None
-        self.channel_data = None
-        self.feature_onsets = None
-        self.feature_descriptions = None
-        self.channel_num = None
-        self.sampling_frequency = None
-        self.acquisition_unit = None
-        self.acquisition_device = None
-        self.session_run = None
-        self.session_comment = None
-
-    def read(self, filepath):
-        print("Reading HDF5 file : ", filepath)
-        
-        self.filepath = filepath
-        self.hdf = h5py.File(filepath, mode="r+")
-        print(self.hdf.keys)
-        # Handle 'RawData' containing the acutal channeld ata
-        rawdata_group = self.hdf["RawData"]
-        self.channel_data = np.array(rawdata_group["Samples"]).transpose()
-        print("Samples : ", self.channel_data.shape)
-        
-        # 'AsynchronData' : This contains Features / Markers
-        async_data_group = self.hdf ["AsynchronData"] 
-        if async_data_group.get("Time"):
-            self.feature_onsets = np.array(async_data_group["Time"]).T[0]
-            self.feature_descriptions = np.array(async_data_group["TypeID"]).T[0]
-            print("feature_onsets : ", self.feature_onsets)
-            print("feature_descriptions : ", self.feature_descriptions) 
-        else:
-            self.feature_onsets = []
-            self.feature_descriptions = []
-        # 'AcquisitionTaskDescription' 
-        acquisition_task_desc = parse_xml(rawdata_group["AcquisitionTaskDescription"].asstr()[0])
-        channel_properties = acquisition_task_desc.get("ChannelProperties")
-        self.channel_num = int(acquisition_task_desc.get("NumberOfAcquiredChannels"))
-        self.sampling_frequency = float(acquisition_task_desc.get("SamplingFrequency"))
-        print("channel_properties : ", channel_properties)
-        print("channel_num : ", self.channel_num )
-        print("sampling_frequency : ", self.sampling_frequency)     
-        
-        #   'DAQDeviceDescription
-        daq_desc = parse_xml(rawdata_group["DAQDeviceDescription"].asstr()[0])
-        self.acquisition_unit = daq_desc.get("Unit") # micro Volts
-        self.acquisition_device = daq_desc.get("Name")
-        print("acquisition_unit : ", self.acquisition_unit)
-        print("acquisition_device : ", self.acquisition_device)
-        
-        #   'SessionDescription'
-        session_desc = parse_xml(rawdata_group["SessionDescription"].asstr()[0])
-        print(session_desc)
-        self.session_run = session_desc.get("Run")
-        self.session_comment = session_desc.get("Comment")
-        print("session_run :", self.session_run)
-        print("session_comment :", self.session_comment)
-        
-        #   'SubjectDescription'
-        subject_desc = parse_xml(rawdata_group["SubjectDescription"].asstr()[0])
-        
-        self.hdf.close()
-
-        return self
-
-    def write_edf(self, output_filepath):
-        """Writes the loaded HDF5 data to an EDF file."""
-        print(f"Writing EDF file: {output_filepath}")
-
-        signal_headers = []
-        for i in range(self.channel_num):
-            signal_headers.append({
-                'label': f'CH{i+1}',
-                'dimension': self.acquisition_unit,
-                'sample_frequency': self.sampling_frequency,
-                'physical_min': np.min(self.channel_data[i]),
-                'physical_max': np.max(self.channel_data[i]),
-                'digital_min': -32768,
-                'digital_max': 32767,
-                'transducer': self.acquisition_device,
-                'prefilter': ''
-            })
-        with pyedflib.EdfWriter(output_filepath, len(signal_headers), file_type=pyedflib.FILETYPE_EDFPLUS) as f:
-            f.setHeader({
-                'technician': '',
-                'recording_additional': "self.session_comment",
-                'patientname': 'patient',
-                'patient_additional': 'asd',
-                'equipment': self.acquisition_device,
-                'admincode': '',
-                'gender': '',
-                'startdate': datetime.datetime.now(),
-                'birthdate': datetime.datetime.now(),
-                'equipment': self.acquisition_device,
-                'recording_additional': "self.session_comment",
-                'patientcode': 'patientcode', #Add patient code
-                'sex' :'m',
-            })
-            f.setSignalHeaders(signal_headers)
-            f.writeSamples(self.channel_data)
-
-            
-            # Write annotations (events/markers)
-            if self.feature_onsets is not None and len(self.feature_onsets) > 0:
-              for onset, description in zip(self.feature_onsets, self.feature_descriptions):
-                f.writeAnnotation(onset / self.sampling_frequency, -1, str(description)) #write annotations individually

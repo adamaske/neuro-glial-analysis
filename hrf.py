@@ -12,7 +12,7 @@ def double_gamma_chrf(t, a1, a2, b1, b2, c):
 
 def test_thetas():
     thetas = [[6, 16, 1, 1, 1/6],
-              [5, 17, 2, 1, 1/10],
+              [5.2, 10.8, 1, 1, 1/6],
               [4, 18, 1, 3, 1/12],
               ]
 
@@ -42,3 +42,4 @@ def test_thetas():
     plt.show()
 
 
+test_thetas()
