@@ -91,7 +91,7 @@ def preprocess(eeg:EEG, bandpass=True, normalization=True, ica=True, rerefernce=
         
     if bandpass: # Apply Bandpass filtering -> 1 to 100 Hz, 50, 60, 100 Hz notch filter
         for idx in range(len(processed_data)):
-            filtered_time_series = butter_bandpass_filter(processed_data[idx], 8, 30, eeg.sampling_frequency, 10)
+            filtered_time_series = butter_bandpass_filter(processed_data[idx], 0.5, 100, eeg.sampling_frequency, 10)
             notched = notch_filter(filtered_time_series, eeg.sampling_frequency, freqs=[50, 60, 100])
             processed_data[idx] = notched
               

@@ -8,9 +8,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.signal import correlate, coherence, hilbert
 from scipy.stats import pearsonr
-
 from scipy.signal import butter, lfilter
-from scipy.signal import hilbert
+
 paths = ["data/Subject01/Trial 1 - Supination/heel2025.03.24_14.27.28.hdf5",
          "data/Subject01/Trial 2 - Pronation/heel2025.03.24_14.31.33.hdf5",
          "data/Subject01/Trial 3 - Supination/heel2025.03.24_14.36.01.hdf5",
@@ -28,16 +27,16 @@ paths = ["data/Subject01/Trial 1 - Supination/heel2025.03.24_14.27.28.hdf5",
 supination_paths = [#"data/Subject01/Trial 1 - Supination/heel2025.03.24_14.27.28.hdf5",
                     #"data/Subject01/Trial 3 - Supination/heel2025.03.24_14.36.01.hdf5",
                     #"data/Subject01/Trial 5 - Supination/heel2025.03.24_14.45.30.hdf5",
-         "data/Subject02/Trial 1/HeelSubject22025.03.27_11.14.27.hdf5",
-         "data/Subject02/Trial 3/HeelSubject22025.03.27_11.21.29.hdf5",
-         "data/Subject02/Trial 5/HeelSubject22025.03.27_11.29.06.hdf5",
+                    "data/Subject02/Trial 1/HeelSubject22025.03.27_11.14.27.hdf5",
+                    "data/Subject02/Trial 3/HeelSubject22025.03.27_11.21.29.hdf5",
+                    "data/Subject02/Trial 5/HeelSubject22025.03.27_11.29.06.hdf5",
                     ]
 pronation_paths = [#"data/Subject01/Trial 2 - Pronation/heel2025.03.24_14.31.33.hdf5",
                    #"data/Subject01/Trial 4 - Pronation/heel2025.03.24_14.40.18.hdf5",
                    #"data/Subject01/Trial 6 - Pronation/heel2025.03.24_14.50.12.hdf5",
-         "data/Subject02/Trial 2/HeelSubject22025.03.27_11.17.47.hdf5",
-         "data/Subject02/Trial 4/HeelSubject22025.03.27_11.25.31.hdf5",
-         "data/Subject02/Trial 6/HeelSubject22025.03.27_11.32.54.hdf5",
+                    "data/Subject02/Trial 2/HeelSubject22025.03.27_11.17.47.hdf5",
+                    "data/Subject02/Trial 4/HeelSubject22025.03.27_11.25.31.hdf5",
+                    "data/Subject02/Trial 6/HeelSubject22025.03.27_11.32.54.hdf5",
                    ]
 
 supination_trials = [EEG(path) for path in supination_paths]
@@ -46,7 +45,7 @@ pronation_trials = [EEG(path) for path in pronation_paths]
 [eeg.trim_from_features(5, 10) for eeg in supination_trials]
 [eeg.trim_from_features(5, 10) for eeg in pronation_trials]
 
-supination_trials = [preprocess(e, ica=False, rerefernce=True) for e in supination_trials]
+supination_trials = [preprocess(e, ica=False) for e in supination_trials]
 pronation_trials = [preprocess(e, ica=False, rerefernce=True) for e in pronation_trials]
 
 def correlate_channels(channel_data, sampling_rate):
@@ -216,7 +215,7 @@ for i, trial in enumerate(supination_trials):
     
     supination_r.append(r)
     supination_cc.append(cc)
-    supination_coh.append(band_coherence["Broadband (0.5-12 Hz)"])
+    supination_coh.append(band_coherence["Alpha (8-12 Hz)"])
 
 for i, trial in enumerate(pronation_trials):
     
@@ -281,7 +280,7 @@ pro_mean_cc = np.mean(pronation_cc, axis=0)
 pro_mean_coh = np.mean(pronation_coh, axis=0)
 
 # Strong Threshold 0.7
-threshold = 0.5
+threshold = 0.7
 sup_thresholded_r = np.where(sup_mean_r > threshold, sup_mean_r, 0)
 sup_thresholded_cc = np.where(sup_mean_cc > threshold, sup_mean_cc, 0)
 sup_thresholded_coh = np.where(sup_mean_coh > threshold, sup_mean_coh, 0)

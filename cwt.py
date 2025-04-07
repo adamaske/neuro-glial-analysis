@@ -1,70 +1,79 @@
-import numpy as np
+import pywt._extensions
+import pywt._extensions._cwt
+import pywt._extensions._pywt
+from wrappers.fnirs import fNIRS
 import pywt
 import matplotlib.pyplot as plt
+import numpy as np
+import random
+random.seed(42)
+snirf = fNIRS()
+snirf.read_snirf("C:/dev/neuro-glial-analysis/data/Subject01/Trial 4 - Pronation/2025-03-24_004.snirf")
 
-def cwt_fnirs(fnirs_signal, sampling_rate, wavelet='morl', min_freq=0.01, max_freq=0.5):
-    """
-    Performs Continuous Wavelet Transform (CWT) on an fNIRS signal, focusing on frequencies
-    between min_freq and max_freq.
+snirf.preprocess(normalization=True, tddr=False, bandpass_low=0.005, bandpass_high=0.07, bandpass_order=50)
 
-    Args:
-        fnirs_signal (numpy.ndarray): The fNIRS time series data.
-        sampling_rate (float): The sampling rate of the fNIRS signal in Hz.
-        wavelet (str): The wavelet to use (e.g., 'morl', 'cmor', 'gaus1').
-        min_freq (float): The minimum frequency of interest (Hz).
-        max_freq (float): The maximum frequency of interest (Hz).
+print("onsets : ", snirf.get_feature_onsets(desc=3))
+channel_data = snirf.channel_data
 
-    Returns:
-        tuple: (cwt_coefficients, frequencies, time_axis)
-            cwt_coefficients (numpy.ndarray): The CWT coefficients.
-            frequencies (numpy.ndarray): The corresponding frequencies.
-            time_axis (numpy.ndarray): The time axis.
-    """
+sample_frequency = snirf.sampling_frequency
 
-    dt = 1 / sampling_rate
-    frequencies = np.arange(min_freq, max_freq + 0.001, 0.001)  # Adjust step as needed
-    frequencies = np.maximum(frequencies, 1e-10) # Ensure no frequency is exactly zero
-    scales = pywt.frequency2scale(wavelet, frequencies, dt)
+signal1 = channel_data[int(random.randrange(0, 51))]
+signal2 = channel_data[int(random.randrange(0, 51))]
+signal3 = channel_data[int(random.randrange(0, 51))]
+signal4 = channel_data[int(random.randrange(0, 51))]
 
-    cwt_coefficients, _ = pywt.cwt(fnirs_signal, scales, wavelet, dt)
+wavelets = pywt._extensions._pywt.wavelist()
+print(wavelets)
+# Desired frequency range (Hz)
+f_min = 0.01
+f_max = 0.07
 
-    time_axis = np.arange(0, len(fnirs_signal) / sampling_rate, dt)
+# Set the wavelet function and scales
+wavelet_function = "cmor" # You can change this to other wavelets like 'gaus1', 'cmor'
+# Calculate the scales corresponding to the desired frequency range
+central_frequency = pywt.central_frequency(wavelet_function)  # Get the wavelet's central frequency
+scales = central_frequency / (np.arange(f_max, f_min - 0.001, -0.001) * sample_frequency) # Vectorized scale calculatio
 
-    return cwt_coefficients, frequencies, time_axis
+# Perform the Continuous Wavelet Transform (CWT) for each signal
+cwt1, freqs1 = pywt.cwt(signal1, scales, wavelet_function, sampling_period=1/sample_frequency)
+cwt2, freqs2 = pywt.cwt(signal2, scales, wavelet_function, sampling_period=1/sample_frequency)
+cwt3, freqs3 = pywt.cwt(signal3, scales, wavelet_function, sampling_period=1/sample_frequency)
+cwt4, freqs4 = pywt.cwt(signal4, scales, wavelet_function, sampling_period=1/sample_frequency)
 
-def plot_cwt_fnirs(cwt_coefficients, frequencies, time_axis, title='CWT of fNIRS'):
-    """
-    Plots the CWT coefficients for fNIRS.
+# Calculate the frequencies corresponding to the scales
+# Use the already calculated scales
+frequencies = central_frequency / (scales * sample_frequency)
 
-    Args:
-        cwt_coefficients (numpy.ndarray): The CWT coefficients.
-        frequencies (numpy.ndarray): The corresponding frequencies.
-        time_axis (numpy.ndarray): The time axis for the fNIRS signal.
-        title (str): The title of the plot.
-    """
+# Plot the CWT results for the 4 signals
+fig, axs = plt.subplots(2, 2, figsize=(12, 8))  # Create a 2x2 grid of subplots
 
-    plt.figure(figsize=(12, 6))
-    plt.imshow(np.abs(cwt_coefficients), extent=[time_axis[0], time_axis[-1], frequencies[-1], frequencies[0]],
-               aspect='auto', cmap='jet')
-    plt.colorbar(label='Magnitude')
-    plt.xlabel('Time (s)')
-    plt.ylabel('Frequency (Hz)')
-    plt.title(title)
-    plt.show()
+# Plot CWT of signal 1
+axs[0, 0].imshow(np.abs(cwt1), extent=[0, len(signal1)/sample_frequency, frequencies[-1], frequencies[0]], aspect='auto',
+                   vmax=abs(cwt1).max(), vmin=-abs(cwt1).max(), cmap='viridis')
+axs[0, 0].set_title('Wavelet Transform of Signal 1')
+axs[0, 0].set_xlabel('Time (seconds)')
+axs[0, 0].set_ylabel('Frequency (Hz)')
 
-# Example usage:
-if __name__ == "__main__":
-    # Generate a synthetic fNIRS signal (replace with your actual fNIRS data)
-    sampling_rate = 10  # Hz (typical fNIRS sampling rate)
-    duration = 100  # seconds
-    time_axis = np.arange(0, duration, 1 / sampling_rate)
-    frequency1 = 0.1  # Hz
-    frequency2 = 0.25 # Hz
-    fnirs_signal = np.sin(2 * np.pi * frequency1 * time_axis) + 0.5 * np.sin(2 * np.pi * frequency2 * time_axis) + np.random.normal(0, 0.1, len(time_axis))
+# Plot CWT of signal 2
+axs[0, 1].imshow(np.abs(cwt2), extent=[0, len(signal2)/sample_frequency, frequencies[-1], frequencies[0]], aspect='auto',
+                   vmax=abs(cwt2).max(), vmin=-abs(cwt2).max(), cmap='viridis')
+axs[0, 1].set_title('Wavelet Transform of Signal 2')
+axs[0, 1].set_xlabel('Time (seconds)')
+axs[0, 1].set_ylabel('Frequency (Hz)')
 
-    # Perform CWT
-    cwt_coeffs, freqs, time_axis = cwt_fnirs(fnirs_signal, sampling_rate)
-    print(freqs)
+# Plot CWT of signal 3
+axs[1, 0].imshow(np.abs(cwt3), extent=[0, len(signal3)/sample_frequency, frequencies[-1], frequencies[0]], aspect='auto',
+                   vmax=abs(cwt3).max(), vmin=-abs(cwt3).max(), cmap='viridis')
+axs[1, 0].set_title('Wavelet Transform of Signal 3')
+axs[1, 0].set_xlabel('Time (seconds)')
+axs[1, 0].set_ylabel('Frequency (Hz)')
 
-    # Plot the CWT
-    plot_cwt_fnirs(cwt_coeffs, freqs, time_axis)
+# Plot CWT of signal 4
+axs[1, 1].imshow(np.abs(cwt4), extent=[0, len(signal4)/sample_frequency, frequencies[-1], frequencies[0]], aspect='auto',
+                   vmax=abs(cwt4).max(), vmin=-abs(cwt4).max(), cmap='viridis')
+axs[1, 1].set_title('Wavelet Transform of Signal 4')
+axs[1, 1].set_xlabel('Time (seconds)')
+axs[1, 1].set_ylabel('Frequency (Hz)')
+
+plt.tight_layout()
+plt.show()
