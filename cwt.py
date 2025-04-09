@@ -29,7 +29,7 @@ f_min = 0.01
 f_max = 0.07
 
 # Set the wavelet function and scales
-wavelet_function = "cmor" # You can change this to other wavelets like 'gaus1', 'cmor'
+wavelet_function = "cmor    " # You can change this to other wavelets like 'gaus1', 'cmor'
 # Calculate the scales corresponding to the desired frequency range
 central_frequency = pywt.central_frequency(wavelet_function)  # Get the wavelet's central frequency
 scales = central_frequency / (np.arange(f_max, f_min - 0.001, -0.001) * sample_frequency) # Vectorized scale calculatio
