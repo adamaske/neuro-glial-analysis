@@ -171,6 +171,49 @@ def plot_r_matrix(r_matrix, channel_names, title):
     plt.xticks(rotation=45)
     plt.yticks(rotation=0)
   
+
+def composite_correlation(channel_data, channel_names, sampling_rate, segment_length:float|None, f_low, f_high):
+    """
+    Calculates and visualizes various correlation measures and their composite.
+
+    Args:
+        channel_data (np.ndarray): 2D array where rows are channels and columns are time points.
+        channel_names (list of str): List of channel names, one name per row of channel_data.
+        sampling_rate (float): Sampling rate of the channels in Hz.
+        segment_length (float or None): Segment length for coherence calculation in seconds.
+                                       If None, the entire signal is used.
+        f_low (float): Lower frequency bound for coherence calculation in Hz.
+        f_high (float): Upper frequency bound for coherence calculation in Hz.
+
+    Returns:
+        np.ndarray: The mean of all correlation matrices (composite correlation).
+    """
+    r, p = pearson_correlation(channel_data)
+    r_cross = cross_correlation(channel_data)
+    r_coh = coherence_correlation(channel_data, sampling_rate, segment_length, f_low, f_high)
+    r_pc = phase_clustering(channel_data)
+    r_pli = phase_lag_index(channel_data)
+    r_wpli = weighted_pli(channel_data)
+    r_mean =  np.mean([r, r_cross, r_coh, r_pc, r_pli, r_wpli], axis=0)
+
+    plt.figure(figsize=(14, 9))
+    plt.subplot(2, 3, 1)
+    plot_r_matrix(r, channel_names, "Pearson Correlation")
+    plt.subplot(2, 3, 2)
+    plot_r_matrix(r_cross, channel_names, "Cross-Correlation")
+    plt.subplot(2, 3, 3)
+    plot_r_matrix(r_coh, channel_names, "Coherence")
+    plt.subplot(2, 3, 4)
+    plot_r_matrix(r_pc, channel_names, "Phase Clustering")
+    plt.subplot(2, 3, 5)
+    plot_r_matrix(r_pli, channel_names, "Phase Lag Index")
+    plt.subplot(2, 3, 6)
+    plot_r_matrix(r_wpli, channel_names, "Weighted PLI")
+    plt.figure(figsize=(6, 5))
+    plot_r_matrix(r_mean, channel_names, "Composite Correlation")
+
+    return r_mean
+
 # Function to generate a channel with a given fundamental frequency and noise
 def generate_channel(freq, sampling_rate, duration, noise_level=1.0):
     time = np.arange(0, duration, 1/sampling_rate)
@@ -214,7 +257,6 @@ plt.subplot(2, 3, 5)
 plot_r_matrix(r_pli, ch_names, "Phase Lag Index")
 plt.subplot(2, 3, 6)
 plot_r_matrix(r_wpli, ch_names, "Weighted PLI")
-
 plt.figure(figsize=(6, 5))
 plot_r_matrix(r_mean, ch_names, "Composite Correlation")
 
