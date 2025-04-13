@@ -79,7 +79,6 @@ class fNIRS():
         annotations = self.snirf._annotations
         self.feature_onsets = np.array(annotations.onset, dtype=float)
         self.feature_descriptions = np.array(annotations.description, dtype=int)
-        
                 
         
     def write_snirf(self, filepath):

@@ -161,7 +161,7 @@ def weighted_pli(channel_data):
 def plot_r_matrix(r_matrix, channel_names, title):
 
     sns.heatmap(r_matrix, 
-                annot=True, 
+                annot=False, 
                 cmap='RdBu_r', 
                 vmin=-1, 
                 vmax=1, 
@@ -221,56 +221,57 @@ def generate_channel(freq, sampling_rate, duration, noise_level=1.0):
     noise = noise_level * np.random.randn(len(time))
     return signal + noise
 
-# Parameters
-num_channels = 5
-sampling_rate = 100  # Samples per second
-duration = 1.0  # Seconds
-fundamental_frequencies = np.array([15.0, 15.25, 15.5, 15.75, 16.0])  # Different fundamental frequencies for each channel
-noise_level = 0.0  # Adjust noise level to control the randomness
-
-# Generate the channels
-channels = np.zeros((num_channels, int(sampling_rate * duration)))
-for i in range(num_channels):
-    channels[i, :] = generate_channel(fundamental_frequencies[i], sampling_rate, duration, noise_level)
-
-ch_names = ["ch1", "ch2", "ch3", "ch4", "ch5"]
-
-r, p = pearson_correlation(channels)
-r_cross = cross_correlation(channels)
-r_coh = coherence_correlation(channels, sampling_rate, 16, 10, 20)
-r_pc = phase_clustering(channels)
-r_pli = phase_lag_index(channels)
-r_wpli = weighted_pli(channels)
-r_mean =  np.mean([r, r_cross, r_coh, r_pc, r_pli, r_wpli], axis=0)
-
-plt.figure(figsize=(14, 9))
-#plt.title(f"Functional Connectivity : [{fundamental_frequencies}] Hz")
-plt.subplot(2, 3, 1)
-plot_r_matrix(r, ch_names, "Pearson Correlation")
-plt.subplot(2, 3, 2)
-plot_r_matrix(r_cross, ch_names, "Cross-Correlation")
-plt.subplot(2, 3, 3)
-plot_r_matrix(r_coh, ch_names, "Coherence")
-plt.subplot(2, 3, 4)
-plot_r_matrix(r_pc, ch_names, "Phase Clustering")
-plt.subplot(2, 3, 5)
-plot_r_matrix(r_pli, ch_names, "Phase Lag Index")
-plt.subplot(2, 3, 6)
-plot_r_matrix(r_wpli, ch_names, "Weighted PLI")
-plt.figure(figsize=(6, 5))
-plot_r_matrix(r_mean, ch_names, "Composite Correlation")
-
-plt.figure(figsize=(10, 8))  # Adjust figure size as needed
-
-time = np.arange(0, duration, 1 / sampling_rate)
-
-for i, channel in enumerate(channels):
-    plt.subplot(num_channels, 1, i + 1)  # Create subplots
-    plt.plot(time, channel)
-    plt.title(f"{ch_names[i]} @ {fundamental_frequencies[i]:.2f} Hz")
-    plt.xlabel("Time (s)")
-    plt.ylabel("Amplitude")
-    plt.grid(True)
-
-plt.tight_layout()  # Adjust layout to prevent overlapping titles
-plt.show()
+if False:
+    # Parameters
+    num_channels = 5
+    sampling_rate = 100  # Samples per second
+    duration = 1.0  # Seconds
+    fundamental_frequencies = np.array([15.0, 15.25, 15.5, 15.75, 16.0])  # Different fundamental frequencies for each channel
+    noise_level = 0.7  # Adjust noise level to control the randomness
+    
+    # Generate the channels
+    channels = np.zeros((num_channels, int(sampling_rate * duration)))
+    for i in range(num_channels):
+        channels[i, :] = generate_channel(fundamental_frequencies[i], sampling_rate, duration, noise_level)
+    
+    ch_names = ["ch1", "ch2", "ch3", "ch4", "ch5"]
+    
+    r, p = pearson_correlation(channels)
+    r_cross = cross_correlation(channels)
+    r_coh = coherence_correlation(channels, sampling_rate, 16, 10, 20)
+    r_pc = phase_clustering(channels)
+    r_pli = phase_lag_index(channels)
+    r_wpli = weighted_pli(channels)
+    r_mean =  np.mean([r, r_cross, r_coh, r_pc, r_pli, r_wpli], axis=0)
+    
+    plt.figure(figsize=(14, 9))
+    #plt.title(f"Functional Connectivity : [{fundamental_frequencies}] Hz")
+    plt.subplot(2, 3, 1)
+    plot_r_matrix(r, ch_names, "Pearson Correlation")
+    plt.subplot(2, 3, 2)
+    plot_r_matrix(r_cross, ch_names, "Cross-Correlation")
+    plt.subplot(2, 3, 3)
+    plot_r_matrix(r_coh, ch_names, "Coherence")
+    plt.subplot(2, 3, 4)
+    plot_r_matrix(r_pc, ch_names, "Phase Clustering")
+    plt.subplot(2, 3, 5)
+    plot_r_matrix(r_pli, ch_names, "Phase Lag Index")
+    plt.subplot(2, 3, 6)
+    plot_r_matrix(r_wpli, ch_names, "Weighted PLI")
+    plt.figure(figsize=(6, 5))
+    plot_r_matrix(r_mean, ch_names, "Composite Correlation")
+    
+    plt.figure(figsize=(10, 8))  # Adjust figure size as needed
+    
+    time = np.arange(0, duration, 1 / sampling_rate)
+    
+    for i, channel in enumerate(channels):
+        plt.subplot(num_channels, 1, i + 1)  # Create subplots
+        plt.plot(time, channel)
+        plt.title(f"{ch_names[i]} @ {fundamental_frequencies[i]:.2f} Hz")
+        plt.xlabel("Time (s)")
+        plt.ylabel("Amplitude")
+        plt.grid(True)
+    
+    plt.tight_layout()  # Adjust layout to prevent overlapping titles
+    plt.show()
