@@ -87,13 +87,11 @@ print("EEG : Pronation")
 for i, path in enumerate(eeg_P):
     print(f"{i+1}. ", os.path.basename(path))
 
+fnirs_S = [fNIRS(file) for file in fnirs_S]
 # HbO S -> Composite Correlation
-for i, file in enumerate(fnirs_S):
+for i, fnirs in enumerate(fnirs_S):
     
-    #filepath = "your/snirf/filepath.snirf"
-    #fnirs = fNIRS(filepath)
-    fnirs = fNIRS(file)
-    fnirs.plot_channels() # See raw data, close window to proceeed
+    #fnirs.plot_channels() # See raw data, close window to proceeed
 
     fnirs.remove_features([2, 5, 6]) # Remove markers 
     fnirs.trim_from_features(cut_from_first_feature=5, cut_from_last_feature=10) # Remove data before and after block design data
@@ -104,51 +102,43 @@ for i, file in enumerate(fnirs_S):
                      normalization=True, # z-normalization
                      )
     
-    fnirs.plot_channels() # Review the processsed
+    #fnirs.plot_channels() # Review the processsed
 
     hbo_data, hbo_names, hbr_data, hbr_names = fnirs.split()
     
-    r = composite_correlation(hbo_data, hbo_names, fnirs.sampling_frequency, None, 0.01, 0.1)
-    plot_r_matrix(r, hbo_names, "Supination Composite Matrix")
-    
-    plt.show()
-    exit()
-    
-    hbo_data, hbo_names, hbr_data, hbr_names = fnirs.split()
-    
-    for i, ch in enumerate(hbo_data):
-        plt.plot(ch, label=hbo_names[i])
-    
-    plt.legend()
-    plt.show()
-    
-    fnirs.remove_features([0, 1, 2, 5, 6])
-    fnirs.print()
-    fnirs.trim_from_features(5, 22)
-    fnirs.print()
-    fnirs.preprocess()
-    fnirs.print()
+    # Epoching
+     
+    markers = {3 : "Pronation", 
+              4 : "Supination"
+              }
     
     
-    hbo_data, hbo_names, hbr_data, hbr_names = fnirs.split()
+    tmin = -2
+    tmax = 20
+    for j, desc in enumerate(fnirs.feature_descriptions):
+        onset = fnirs.feature_onsets[j]
+        
+        marker = markers[desc] 
+        
+        start = int((onset + tmin) * fnirs.sampling_frequency)
+        end = int((onset + tmax) * fnirs.sampling_frequency)
+        
+        hbo_epoch = hbo_data[:, start:end]
+        hbr_epoch = hbr_data[:, start:end]
+        
+        # 
+        r = composite_correlation(hbo_epoch, hbo_names, fnirs.sampling_frequency, 16, 0.01, 0.1)
+        plot_r_matrix(r, hbo_names, f"HbO Epoch {j + 1}")
+        
+        plt.show()
+        
+        epoch_data = fnirs.channel_data[:, start:end]
+        
+        print("epoch : ", epoch_data.shape)
+        print(f"{j}. ", marker)
+        
+exit()
     
-    for i, ch in enumerate(hbr_data):
-        plt.plot(ch, label=hbr_names[i])
+r = composite_correlation(hbo_data, hbo_names, fnirs.sampling_frequency, None, 0.01, 0.1)
+plot_r_matrix(r, hbo_names, "Supination Composite Matrix")
     
-    plt.legend()
-    plt.show()
-    exit()
-    #fnirs.trim()
-    #fnirs.preprocess()
-    
-    #fnirs_data = fnirs.channel_data
-    
-    r_mean = composite_correlation(channel_data=fnirs.channel_data, 
-                                   channel_names=fnirs.channel_names, 
-                                   sampling_rate=fnirs.sampling_frequency,
-                                   segment_length=128,
-                                   f_low=0.01,
-                                   f_high=0.1)
-    plot_r_matrix(r_mean, fnirs.channel_names, "fNIRS Supination")
-    plt.show()
-# HbR P -> Composite Correlation
