@@ -4,6 +4,31 @@ import matplotlib.pyplot as plt
 from scipy.stats import pearsonr
 from scipy.signal import correlate, coherence, hilbert
 import seaborn as sns
+
+def merge_matrices_diagonally(m1, m2):
+    # Creates a new matrix with m1 and m2
+    # m1 is the lower right triangle and m2 is the upper left triangle
+    assert(m1.shape[0] == m1.shape[1])
+    assert(m1.shape == m2.shape)
+    
+    n = m1.shape[0]  # Size of the square matrix
+    merged_matrix = np.zeros((n, n), dtype=m1.dtype) # Use the datatype of m1
+
+    for i in range(n):
+        for j in range(n):
+            if j >= i:
+                merged_matrix[i, j] = m2[i, j]  # Lower-right triangle (and diagonal) from m1
+            else:
+                merged_matrix[i, j] = m1[i, j]  # Upper-left triangle from m2
+    return merged_matrix
+
+def threshold_matrix(matrix, threshold):
+    
+    """Applies a threshold to the matrix, setting values below the threshold to zero."""
+    matrix[matrix < threshold] = 0
+    return matrix
+
+
 def pearson_correlation(channel_data):
 
     r_matrix = np.zeros((channel_data.shape[0], channel_data.shape[0]))
@@ -158,13 +183,13 @@ def weighted_pli(channel_data):
 
     return wpli_matrix
 
-def plot_r_matrix(r_matrix, channel_names, title):
+def plot_r_matrix(r_matrix, channel_names, title, vmin=-1, vmax=1):
 
     sns.heatmap(r_matrix, 
                 annot=False, 
                 cmap='RdBu_r', 
-                vmin=-1, 
-                vmax=1, 
+                vmin=vmin, 
+                vmax=vmax, 
                 xticklabels=channel_names, 
                 yticklabels=channel_names)
     plt.title(title)
@@ -172,7 +197,7 @@ def plot_r_matrix(r_matrix, channel_names, title):
     plt.yticks(rotation=0)
   
 
-def composite_correlation(channel_data, channel_names, sampling_rate, segment_length:float|None, f_low, f_high):
+def composite_correlation(channel_data, channel_names, sampling_rate, segment_length:float|None, f_low, f_high, plot=False):
     """
     Calculates and visualizes various correlation measures and their composite.
 
@@ -196,21 +221,22 @@ def composite_correlation(channel_data, channel_names, sampling_rate, segment_le
     r_wpli = weighted_pli(channel_data)
     r_mean =  np.mean([r, r_cross, r_coh, r_pc, r_pli, r_wpli], axis=0)
 
-    plt.figure(figsize=(14, 9))
-    plt.subplot(2, 3, 1)
-    plot_r_matrix(r, channel_names, "Pearson Correlation")
-    plt.subplot(2, 3, 2)
-    plot_r_matrix(r_cross, channel_names, "Cross-Correlation")
-    plt.subplot(2, 3, 3)
-    plot_r_matrix(r_coh, channel_names, "Coherence")
-    plt.subplot(2, 3, 4)
-    plot_r_matrix(r_pc, channel_names, "Phase Clustering")
-    plt.subplot(2, 3, 5)
-    plot_r_matrix(r_pli, channel_names, "Phase Lag Index")
-    plt.subplot(2, 3, 6)
-    plot_r_matrix(r_wpli, channel_names, "Weighted PLI")
-    plt.figure(figsize=(6, 5))
-    plot_r_matrix(r_mean, channel_names, "Composite Correlation")
+    if plot:
+        plt.figure(figsize=(14, 9))
+        plt.subplot(2, 3, 1)
+        plot_r_matrix(r, channel_names, "Pearson Correlation")
+        plt.subplot(2, 3, 2)
+        plot_r_matrix(r_cross, channel_names, "Cross-Correlation")
+        plt.subplot(2, 3, 3)
+        plot_r_matrix(r_coh, channel_names, "Coherence")
+        plt.subplot(2, 3, 4)
+        plot_r_matrix(r_pc, channel_names, "Phase Clustering")
+        plt.subplot(2, 3, 5)
+        plot_r_matrix(r_pli, channel_names, "Phase Lag Index")
+        plt.subplot(2, 3, 6)
+        plot_r_matrix(r_wpli, channel_names, "Weighted PLI")
+        plt.figure(figsize=(6, 5))
+        plot_r_matrix(r_mean, channel_names, "Composite Correlation")
 
     return r_mean
 

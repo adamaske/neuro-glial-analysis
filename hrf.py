@@ -42,4 +42,4 @@ def test_thetas():
     plt.show()
 
 
-test_thetas()
+#test_thetas()

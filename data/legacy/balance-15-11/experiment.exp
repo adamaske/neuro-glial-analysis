@@ -1,8 +1,0 @@
-{
-    "name": "balance with mats",
-    "time": "2024-11-15 00:00:00",
-    "description": "5 trails: barefoot, easy mat, easy mat with visual marker, and difficult mat",
-    "participants": "Adam",
-    "data_folder": "data/balance-15-11",
-    "filepath": "data/balance-15-11/experiment.exp"
-}

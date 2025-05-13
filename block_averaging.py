@@ -9,8 +9,6 @@ hrf = double_gamma_chrf(t, 6, 16, 1, 1, 1/6) # As noted in Lindquist 2009
 tmin = 0
 tmax = 20
 
-for snirf in snrifs:
-    
 #Parameters
 duration = 15  # seconds
 sampling_rate = 5  # Hz
@@ -40,7 +38,41 @@ def b_value(y, x):
     X_transpose_Y = np.matmul(X_transpose, y)
     b = np.matmul(x_transpose_x_inverse, X_transpose_Y)
     return b
+
+def glm(y, x):
+    """
+    Y = BX + e\n
+    B = (X^T*X)^-1 * X^T * Y\n
+    Args:
+        y : One dimensional time series - signal\n
+        x : One dimensional time series - 
+    Returns:
+        B : Beta value (sensitivty of Y to X)
+    """
+    X = x.reshape(-1, 1)
+    Y = y.reshape(-1, 1)
     
+    x_transpose_x = np.matmul(X.T, X)
+    try:
+        x_transpose_x_inverse = np.linalg.inv(x_transpose_x)
+    except np.linalg.LinAlgError:
+        x_transpose_x_inverse = 0 
+
+    x_transpose_y = np.matmul(X.T, Y)
+    B = np.matmul(x_transpose_x_inverse, x_transpose_y)[0, 0] #extract scalar beta
+    
+    return B
+
+def beta_value(x, y):
+    # Calculate beta
+    x_transpose = x.T
+    x_transpose_x = np.dot(x_transpose, x)
+    try:
+        x_transpose_x_inverse = np.linalg.inv(x_transpose_x)
+    except np.linalg.LinAlgError:
+        return 0  # Skip this window if matrix is singular
+    x_transpose_y = np.dot(x_transpose, y)
+    return np.dot(x_transpose_x_inverse, x_transpose_y)[0, 0] #extract scalar beta    
     
 # Reshape X to be a column vector (necessary for matrix multiplication)
 X = boxcar_function.reshape(-1, 1) # or boxcar_function[:, np.newaxis]
@@ -72,18 +104,6 @@ for i in range(0, num_samples - window_size + 1, step_size):
     window_x = window_x.reshape(-1, 1)
     window_y = window_y.reshape(-1, 1)
 
-    def beta_value(x, y):
-        # Calculate beta
-        x_transpose = x.T
-        x_transpose_x = np.dot(x_transpose, x)
-        try:
-            x_transpose_x_inverse = np.linalg.inv(x_transpose_x)
-        except np.linalg.LinAlgError:
-            return 0  # Skip this window if matrix is singular
-
-        x_transpose_y = np.dot(x_transpose, y)
-        return np.dot(x_transpose_x_inverse, x_transpose_y)[0, 0] #extract scalar beta
-    
     beta = beta_value(window_x, window_y)
     center_index = window_start + window_size // 2
     beta_values[center_index] = beta #add beta value to the correct index
@@ -123,7 +143,7 @@ plt.xlabel("Time (seconds)")
 plt.ylabel("Amplitude")
 plt.grid(True)
 
-plt.subplot(4, 2, 1)
+plt.subplot(4, 2, 3)
 plt.plot(time, beta_values, label="Sliding Window Beta Values")
 plt.title("Sliding Window Beta Values")
 plt.xlabel("Time (seconds)")
@@ -131,3 +151,4 @@ plt.ylabel("Beta Value")
 plt.legend()
 plt.grid(True)
 
+plt.show()

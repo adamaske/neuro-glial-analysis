@@ -91,13 +91,10 @@ def preprocess(eeg:EEG, bandpass=True, normalization=True, ica=True, rerefernce=
         
     if bandpass: # Apply Bandpass filtering -> 1 to 100 Hz, 50, 60, 100 Hz notch filter
         for idx in range(len(processed_data)):
-            filtered_time_series = butter_bandpass_filter(processed_data[idx], 0.5, 100, eeg.sampling_frequency, 10)
+            filtered_time_series = butter_bandpass_filter(processed_data[idx], 8, 30, eeg.sampling_frequency, 5)
             notched = notch_filter(filtered_time_series, eeg.sampling_frequency, freqs=[50, 60, 100])
             processed_data[idx] = notched
               
-        eeg.preprocessing_history.append({'bandpass': {'lowcut': 1, 'highcut': 100, 'notch_freqs': [50, 60, 100]}})
-        
-    
     
     if ica:
         ica = FastICA(n_components=processed_data.shape[0])
@@ -111,8 +108,7 @@ def preprocess(eeg:EEG, bandpass=True, normalization=True, ica=True, rerefernce=
     # Common Average Refrence 
     if rerefernce:
         processed_data = common_average_reference_filter(processed_data)
-        eeg.preprocessing_history.append({'common_average_reference': {}})
-    
+        
     # Motion Correction -> Not implemented
     #processed_data = motion_correction(processed_data) 
     #eeg.preprocessing_history.append({'motion_correction': {}})
@@ -120,7 +116,6 @@ def preprocess(eeg:EEG, bandpass=True, normalization=True, ica=True, rerefernce=
     # Normalization
     if normalization:
         processed_data = normalize(processed_data, znorm=True)
-        eeg.preprocessing_history.append({'normalize': {'znorm': True}})
     
 
 
@@ -133,8 +128,9 @@ band_ranges_spec = {
         "Theta (4-8 Hz)": (4, 8),
         "Alpha (8-12 Hz)": (8, 12),
         "Beta (12-30 Hz)": (12, 30),
-        "Gamma (30-100 Hz)": (30, 100)
+        "Gamma (30-100 Hz)": (30, 100),
     }
+
 band_power_colors = ['blue', 'green', 'orange', 'red', 'purple']
 
 def compute_band_power(spectra, freqs):

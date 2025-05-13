@@ -82,24 +82,24 @@ snirf = read_snirf("data/Subject01/Trial 1 - Supination/2025-03-24_001.snirf")
 
 # Example usage:
 np.random.seed(42)
-signal1 = np.sin(np.linspace(0, 10 * np.pi, 1000)) + 0.1 * np.random.randn(1000)
-signal2 = np.sin(np.linspace(0, 10 * np.pi + np.pi / 4, 1000)) + 0.1 * np.random.randn(1000)
+signal1 = np.sin(np.linspace(0, 10 * np.pi, 1000)) + 0.0 * np.random.randn(1000)
+signal2 = np.sin(np.linspace(0, 10 * np.pi + np.pi / 4, 1000)) + 0.0 * np.random.randn(1000)
 
 correlation, p_value = power_envelope_correlation(signal1, signal2, plot=True) #plot=True
 
 print(f"Pearson correlation coefficient: {correlation}")
 print(f"P-value: {p_value}")
 
-signal3 = np.sin(np.linspace(0, 10 * np.pi, 1000)) + 0.1 * np.random.randn(1000)
-signal4 = signal3 + 0.05 * np.random.randn(1000)
+signal3 = np.sin(np.linspace(0, 10 * np.pi, 1000)) + 0.0 * np.random.randn(1000)
+signal4 = signal3 + 0.00 * np.random.randn(1000)
 
 correlation2, p_value2 = power_envelope_correlation(signal3, signal4, plot=True)
 
 print(f"Pearson correlation coefficient (nearly identical signals): {correlation2}")
 print(f"P-value (nearly identical signals): {p_value2}")
 
-signal5 = np.sin(np.linspace(0, 10 * np.pi, 1000)) + 0.1 * np.random.randn(1000)
-signal6 = np.cos(np.linspace(0, 10 * np.pi, 1000)) + 0.1 * np.random.randn(1000)
+signal5 = np.sin(np.linspace(0, 10 * np.pi, 1000)) + 0.0 * np.random.randn(1000)
+signal6 = np.cos(np.linspace(0, 10 * np.pi, 1000)) + 0.0 * np.random.randn(1000)
 
 correlation3, p_value3 = power_envelope_correlation(signal5, signal6, plot=True)
 
