@@ -97,7 +97,9 @@ for i, subject in enumerate(fnirs_data):
                      hemoglobin_concentration=True,
                      temporal_filtering=True, # Bandpass 0.01 to 0.1 Hz
                      normalization=True, # z-normalization
+                     detrend=False
                      )
+<<<<<<< Updated upstream
         
     for j, trial in enumerate(fnirs_data[subject]["Pronation"]):
         print(f"Preprocessing {subject} Pronation Trial {j+1}")
@@ -109,6 +111,20 @@ for i, subject in enumerate(fnirs_data):
                      normalization=True, # z-normalization
                      )    
 # GLM
+=======
+    
+    fnirs.plot_channels()
+    fnirs.preprocess(optical_density=False, 
+                     hemoglobin_concentration=False,
+                     temporal_filtering=False, # Bandpass 0.01 to 0.1 Hz
+                     normalization=False, # z-normalization
+                     detrend=True
+                     )
+    fnirs.plot_channels()
+    
+    exit()
+    #fnirs.plot_channels() # Review the processsed
+>>>>>>> Stashed changes
 
 # Block Averaging
 for i, subject in enumerate(fnirs_data):

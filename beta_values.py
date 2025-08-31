@@ -6,11 +6,11 @@ from hrf import double_gamma_chrf
     
 def glm(y, x):
     """
-    Y = BX + e\n
+    Y = XB + e\n
     B = (X^T*X)^-1 * X^T * Y\n
     Args:
         y : One dimensional time series - signal\n
-        x : One dimensional time series - 
+        x : One dimensional time series - hrf\n
     Returns:
         B : Beta value (sensitivty of Y to X)
     """
@@ -22,10 +22,10 @@ def glm(y, x):
         x_transpose_x_inverse = np.linalg.inv(x_transpose_x)
     except np.linalg.LinAlgError:
         x_transpose_x_inverse = 0 
+    x_transpose_x_inverse_x_transpose = np.matmul(x_transpose_x_inverse, X.T)
 
-    x_transpose_y = np.matmul(X.T, Y)
-    B = np.matmul(x_transpose_x_inverse, x_transpose_y)[0, 0] #extract scalar beta
-    
+    B = np.matmul(x_transpose_x_inverse_x_transpose, Y)[0, 0] #extract scalar beta
+
     return B
 
 def test_beta_value_calculation():
@@ -160,7 +160,34 @@ def test_sliding_window_glm():
 
     plt.title(f"GLM: Gaussian Signal & cHRF\nBeta (integral) = {np.trapezoid(betas, np.linspace(0, duration, len(betas)))}", fontsize=15)
     plt.show()
-    
+
+def test_glm():
+    #Parameters
+    duration = 20  # seconds
+    sampling_rate = 5  # Hz
+    num_samples = int(duration * sampling_rate)
+    time = np.linspace(0, duration, num_samples)
+
+    g1_mean = 6
+    g1_std = 3>
+
+    g2_mean = 14
+    g2_std = 2
+    g1 = np.exp(-0.5 * ((time - g1_mean) / g1_std)**2)
+    g2 = np.exp(-0.5 * ((time - g2_mean) / g2_std)**2)
+
+    hrf = double_gamma_chrf(time, 6, 16, 1, 1, 1/6)
+    beta_g1 = glm(g1, hrf)
+    beta_g2 = glm(g2, hrf)
+
+    plt.plot(time, g1, label=f"{beta_g1:.2f}", color="black", linestyle="-")
+    plt.plot(time, g2, label=f"{beta_g2:.2f}", color="black", linestyle="--")
+
+    plt.plot(time, hrf, label="cHRF", color="red")
+    plt.legend()
+    plt.show()
+
 if __name__ == "__main__":
+    test_glm()
     test_beta_value_calculation()
     test_sliding_window_glm()

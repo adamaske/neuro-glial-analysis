@@ -1,7 +1,35 @@
 import numpy as np
 import matplotlib.pyplot as plt
-
 from hrf import double_gamma_chrf
+from neuropipeline.fnirs import fNIRS
+
+tmin = 0
+tmax = 20
+
+fnirs = fNIRS()
+# Load fNIRS data
+
+# split HbO HbR
+
+
+# For subject 1
+# For trial 1
+# epochs = 
+# epoch_avg = []
+# for onset in fnirs.feature_onsets:
+#       epoch = hbo_data[:, (onset + tmin):(onset+tmax)]
+#       epochs.append(epoch)
+# block_average = np.mean(epochs)
+# t = Shape of epoch
+# hrf = double_gamma_chrf(t, 6, 16, 1, 1, 1/6) # As noted in Lindquist 2009
+# beta = b_value(epoch, hrf)
+#
+# if fnirs.feature_descriptions[0] == "3" : Pronation
+# elif fnirs.feature_descriptions[0] == "4" : Supination
+#       save the block average figure and beta value
+# -> figname = "sub_" + i + "_trial_" + j + "_pronation_" + ch_name + "_" + beta ".png" 
+# plt.savefig()
+# Block 1, 2, 3
 
 t = np.linspace(0, 20, 100)
 hrf = double_gamma_chrf(t, 6, 16, 1, 1, 1/6) # As noted in Lindquist 2009
@@ -14,7 +42,7 @@ duration = 15  # seconds
 sampling_rate = 5  # Hz
 num_samples = int(duration * sampling_rate)
 time = np.linspace(0, duration, num_samples)
-mean = 0
+mean = 7
 std_dev = 1
 # Gaussian time series
 gaussian_time_series = np.exp(-0.5 * ((time - mean) / std_dev)**2)
@@ -124,8 +152,6 @@ Y_predicted = np.matmul(X, B)
 # Perform convolution
 convolution_result = np.convolve(gaussian_time_series, boxcar_function, mode='same')
 
-
-
 # Plotting
 plt.figure(figsize=(12, 6))
 
@@ -143,12 +169,29 @@ plt.xlabel("Time (seconds)")
 plt.ylabel("Amplitude")
 plt.grid(True)
 
+<<<<<<< Updated upstream
 plt.subplot(4, 2, 3)
+=======
+plt.subplot(4, 1, 3)
+plt.plot(time, convolution_result)
+plt.title("convolution_result (5-10 seconds)")
+plt.xlabel("Time (seconds)")
+plt.ylabel("Amplitude")
+plt.grid(True)
+
+plt.subplot(4, 1, 4)
+>>>>>>> Stashed changes
 plt.plot(time, beta_values, label="Sliding Window Beta Values")
 plt.title("Sliding Window Beta Values")
 plt.xlabel("Time (seconds)")
 plt.ylabel("Beta Value")
+plt.ylim((0, 1))
 plt.legend()
 plt.grid(True)
 
+<<<<<<< Updated upstream
 plt.show()
+=======
+plt.show()
+
+>>>>>>> Stashed changes

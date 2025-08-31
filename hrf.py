@@ -7,7 +7,7 @@ def gamma(x, alpha, beta):
 
 def double_gamma_chrf(t, a1, a2, b1, b2, c):
     """ Computes a double gamma canonical hemodynamic response function."""
-    hrf = gamma(t, a1, b2) - (c* gamma(t, a2,b2))
+    hrf = gamma(t, a1, b1) - (c* gamma(t, a2, b2))
     return hrf
 
 def test_thetas():
